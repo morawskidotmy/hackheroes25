@@ -15,6 +15,7 @@ RESET = '\033[0m'
 
 PLIK_LOGU = 'test.log'
 
+
 def drukuj_status(msg, kolor=NIEBIESKI):
     print(f"{kolor}[*] {msg}{RESET}")
 

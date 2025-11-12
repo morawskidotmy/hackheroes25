@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sqrt(CO) - Śledzenie wpływu na klimat</title>
+    <title>sqrtco - Śledzenie wpływu na klimat</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -1140,22 +1140,21 @@
         }
 
         function shareStatsGraphic() {
-            const userId = currentUser?.id;
-            if (!userId) return;
-            
-            const graphicUrl = `/v1/share-graphic-stats/${userId}`;
-            
-            // Open the graphic in a new tab
-            const link = document.createElement('a');
-            link.href = graphicUrl;
-            link.target = '_blank';
-            link.download = `my-carbon-impact-${userId}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            alert('✓ Grafika pobrana! Udostępnij ją na mediach społecznych.');
-        }
+             const userId = currentUser?.id;
+             if (!userId) return;
+             
+             const graphicUrl = `/v1/share-graphic-stats/${userId}`;
+             
+             const link = document.createElement('a');
+             link.href = graphicUrl;
+             link.target = '_blank';
+             link.download = `my-carbon-impact-${userId}.png`;
+             document.body.appendChild(link);
+             link.click();
+             document.body.removeChild(link);
+             
+             alert('✓ Grafika pobrana! Udostępnij ją na mediach społecznych.');
+         }
 
         async function calculate() {
             const startLat = parseFloat(document.getElementById('startLat').value);

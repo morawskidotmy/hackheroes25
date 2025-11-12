@@ -35,6 +35,7 @@ CORS(app)
 dostawca = Dostawa_MEVO()
 
 
+
 def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     
@@ -294,7 +295,7 @@ def zapisz_podroze():
         
         wynik = klient_supabase.table('journey_tracking').insert(dane_podrozy).execute()
         
-        aktualizuj_statystyki_uzytkownika(uzytkownik_id, wybrany_transport, potencjalny_co2)
+        aktualizuj_statystyki_uzytkownika(uzytkownik_id, wybrany_transport, potencjalny_co2, dystans)
         
         return jsonify({
             'success': True,
@@ -307,7 +308,7 @@ def zapisz_podroze():
         return jsonify({'error': 'Nie udało się zapisać podróży', 'details': str(e)}), 500
 
 
-def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_oszczedzony: float):
+def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_oszczedzony: float, dystans: float = 0):
     try:
         if not klient_supabase:
             return
@@ -316,15 +317,17 @@ def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_os
         
         if wynik.data:
             obecny = wynik.data[0]
-            nowy_co2 = obecny['total_co2_saved_kg'] + (co2_oszczedzony if transport == 'bike' else 0)
+            nowy_co2_oszczedzony = obecny['total_co2_saved_kg'] + (co2_oszczedzony if transport == 'bike' else 0)
+            nowy_co2_emitowany = obecny.get('total_co2_emitted_kg', 0) + (dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0)
             nowa_liczba_rowerow = obecny['total_bike_journeys'] + (1 if transport == 'bike' else 0)
             nowa_liczba_samochodow = obecny['total_car_journeys'] + (1 if transport == 'car' else 0)
             
-            szacowany_co2_samochod = nowa_liczba_samochodow * CO2_NA_KM_SAMOCHOD * 10
-            neutralny_net = nowy_co2 >= szacowany_co2_samochod
+            saldo_netto = nowy_co2_oszczedzony - nowy_co2_emitowany
+            neutralny_net = saldo_netto >= 0
             
             klient_supabase.table('user_stats').update({
-                'total_co2_saved_kg': round(nowy_co2, 3),
+                'total_co2_saved_kg': round(nowy_co2_oszczedzony, 3),
+                'total_co2_emitted_kg': round(nowy_co2_emitowany, 3),
                 'total_bike_journeys': nowa_liczba_rowerow,
                 'total_car_journeys': nowa_liczba_samochodow,
                 'net_neutral': neutralny_net,
@@ -332,9 +335,11 @@ def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_os
             }).eq('user_id', uzytkownik_id).execute()
         else:
             neutralny_net = transport == 'bike'
+            co2_emitowany = dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0
             klient_supabase.table('user_stats').insert({
                 'user_id': uzytkownik_id,
                 'total_co2_saved_kg': round(co2_oszczedzony if transport == 'bike' else 0, 3),
+                'total_co2_emitted_kg': round(co2_emitowany, 3),
                 'total_bike_journeys': 1 if transport == 'bike' else 0,
                 'total_car_journeys': 1 if transport == 'car' else 0,
                 'net_neutral': neutralny_net,
@@ -357,11 +362,13 @@ def pobierz_statystyki_uzytkownika(user_id):
         if wynik_statystyk.data:
             stat_uzytkownika = wynik_statystyk.data[0]
             laczsny_co2 = stat_uzytkownika['total_co2_saved_kg']
+            co2_emitowany = stat_uzytkownika.get('total_co2_emitted_kg', 0)
             podroze_rowerem = stat_uzytkownika['total_bike_journeys']
             podroze_samochodem = stat_uzytkownika['total_car_journeys']
             neutralny_net = stat_uzytkownika['net_neutral']
         else:
             laczsny_co2 = 0
+            co2_emitowany = 0
             podroze_rowerem = 0
             podroze_samochodem = 0
             neutralny_net = False
@@ -431,7 +438,7 @@ def wygeneruj_grafike_dzielenia(user_id):
         tekst_podrozy = f"{liczba} podróży"
         rysowanie.text((szerokosc//2, 480), tekst_podrozy, fill='#888888', font=czcionka_etykieta, anchor="mm")
         
-        rysowanie.text((szerokosc//2, wysokosc-50), "sqrtco.pl", fill='#666666', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, wysokosc-50), "hh25.morawski.my", fill='#666666', font=czcionka_etykieta, anchor="mm")
         
         img_io = BytesIO()
         obraz.save(img_io, 'PNG', quality=95)
@@ -453,12 +460,14 @@ def wygeneruj_grafike_statystyk(user_id):
         wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
         
         laczsny_co2_oszczedzony = 0
+        laczsny_co2_emitowany = 0
         podroze_rowerem = 0
         podroze_samochodem = 0
         
         if wynik_statystyk.data:
             stat_uzytkownika = wynik_statystyk.data[0]
             laczsny_co2_oszczedzony = stat_uzytkownika['total_co2_saved_kg']
+            laczsny_co2_emitowany = stat_uzytkownika.get('total_co2_emitted_kg', 0)
             podroze_rowerem = stat_uzytkownika['total_bike_journeys']
             podroze_samochodem = stat_uzytkownika['total_car_journeys']
         
@@ -467,9 +476,7 @@ def wygeneruj_grafike_statystyk(user_id):
         
         laczsny_co2_oszczedzony += stary_co2
         
-        szacowany_co2_samochod = podroze_samochodem * 10 * CO2_NA_KM_SAMOCHOD
-        
-        saldo_netto = laczsny_co2_oszczedzony - szacowany_co2_samochod
+        saldo_netto = laczsny_co2_oszczedzony - laczsny_co2_emitowany
         jest_pozytywne = saldo_netto >= 0
         
         szerokosc, wysokosc = 1200, 630

@@ -5,7 +5,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     lat1_rad = math.radians(lat1)
@@ -17,7 +16,6 @@ def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * math.asin(math.sqrt(a))
     
     return R * c
-
 
 class Dostawa_MEVO:
     
