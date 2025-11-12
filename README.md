@@ -8,17 +8,17 @@ Aplikacja do śledzenia wpływu na klimat poprzez wybór roweru zamiast samochod
 
 ## O aplikacji
 
-Zielony Pedał pokazuje realny wpływ Twoich wyborów transportu na środowisko. Każda podróż rowerem generuje konkretne oszczędności CO₂, które możesz śledzić i udostępniać na mediach społecznych.
+sqrtco to innowacyjna aplikacja, która pozwala na śledzenie wpływu Twoich decyzji transportowych na klimat. Każda podróż rowerem przyczynia się do realnych oszczędności CO₂, które możesz monitorować i dzielić się nimi w mediach społecznościowych.
 
 ### Co możesz robić:
 
-- 📊 **Obliczać oszczędności CO₂** dla każdej podróży
-- 🚴 **Śledzić wybory transportu** (rower vs samochód)
-- 🔍 **Wyszukiwać stacje rowerów MEVO** w okolicy
-- 📈 **Monitorować wpływ netto** - czy jesteś net-pozytywny dla klimatu
-- 🌍 **Generować grafiki** do udostępniania na Instagramie, Twitterze, TikToku
-- 👥 **Logować się** przez Email lub Discord
-- 📱 **Otrzymywać motywację** do dalszych ekologicznych wyborów
+- 📊 **Obliczać oszczędności CO₂** dla każdej trasy
+- 🚴 **Śledzić wybory transportowe** (rower vs samochód)
+- 🔍 **Wyszukiwać stacje rowerowe MEVO** w okolicy
+- 📈 **Monitorować wpływ netto** na klimat
+- 🌍 **Generować grafiki** do udostępniania w serwisach społecznościowych
+- 👥 **Logować się** przez e-mail lub Discord
+- 📱 **Otrzymywać motywacyjne powiadomienia** o ekologicznych wyborach
 
 ---
 
@@ -27,143 +27,77 @@ Zielony Pedał pokazuje realny wpływ Twoich wyborów transportu na środowisko.
 ### Frontend
 - **HTML5**, **CSS3**, **Vanilla JavaScript**
 - Nowoczesny, responsywny design
-- Działa na mobilnych i desktopowych urządzeniach
+- Dostępność na urządzeniach mobilnych i desktopowych
 
 ### Backend
 - **Flask** (Python)
-- **PIL/Pillow** - generowanie grafik PNG
-- **CORS** - integracja z frontendem
+- **PIL/Pillow** do generowania grafik PNG
+- **CORS** dla płynnej integracji z frontendem
 
 ### Baza danych
 - **Supabase** (PostgreSQL)
-- **Autentykacja**: Email/Hasło, Discord OAuth
-- **RLS** - Row-Level Security dla bezpieczeństwa
+- **Autoryzacja**: E-mail, hasło oraz Discord OAuth
+- **RLS** (Row-Level Security) dla zwiększenia bezpieczeństwa
 
 ### Zewnętrzne API
-- **MEVO API** - dane o stacjach rowerów
-- **Haversine formula** - dokładne obliczanie odległości
+- **MEVO API** - sugestie lokalnych stacji rowerowych
+- **Haversine formula** dla precyzyjnego obliczania odległości
 
 ### Narzędzia
 - **Python 3.9+**
-- **Docker** - containerization
-- **Git** - version control
+- **Git** - kontrola wersji
 
 ---
 
 ## Funkcjonalność
 
 ### 1. Obliczanie oszczędności CO₂
-Wpisz punkt startu i koniec - aplikacja obliczy:
-- Odległość (km)
-- Oszczędzę CO₂ (kg)
+Wprowadź punkty startu i końca, a aplikacja obliczy:
+- Odległość w kilometrach
+- Oszczędności CO₂ w kilogramach
 - Czas podróży (rower vs samochód)
-- Równoważną ilość uratowanych drzew
+- Ilość uratowanych drzew
 
-**Wzór**: 0.12 kg CO₂ na km (emisje samochodu)
+**Wzór**: 0.12 kg CO₂ na kilometr (średnia emisja dla samochodu)
 
 ### 2. Śledzenie transportu
-Po zalogowaniu możesz zapisać każdą podróż i wybrać:
+Po zalogowaniu możesz dokumentować każdą podróż, wybierając:
 - 🚴 Rower (oszczędza CO₂)
-- 🚗 Samochód (produkuje CO₂)
+- 🚗 Samochód (generuje CO₂)
 
-### 3. Net Balance
+### 3. Bilans netto
 Aplikacja oblicza Twój wpływ netto:
 - **Zielony**: Oszczędzasz więcej CO₂, niż produkujesz ✓
-- **Czerwony**: Większe emisje z samochodów ⚠️
+- **Czerwony**: Wyższe emisje z samochodów ⚠️
 
 ### 4. Grafiki do mediów społecznych
-Generuj piękne grafiki PNG (1200x630px):
-- Pokazują Twój net CO₂ balance
+Generuj efektowne grafiki PNG (1200x630 px):
+- Pokazujące Twój bilans CO₂
 - Dynamiczne kolory (zielony/czerwony)
 - Statystyki podróży
-- Gotowe do udostępniania na Instagramie, Twitterze, TikToku
+- Gotowe do dzielenia się na Instagramie, Twitterze, TikToku
 
 ---
 
 ## Cechy
 
-✅ **Całkowicie po polsku** - UI, dokumentacja, komunikaty  
-✅ **Bezpłatne** - bez ukrytych opłat  
-✅ **Bezpieczne** - Twoje dane chronione przez RLS  
-✅ **Responsywne** - działa na wszystkich urządzeniach  
-✅ **Szybkie** - optymalizowana wydajność  
-✅ **Motywujące** - gamification poprzez net-balance  
-✅ **Shareable** - udostępnianie na mediach społecznych  
+✅ **Bezpiecznie** - Twoje dane chronione przez RLS  
+✅ **Responsywne** - dostosowane do różnych urządzeń  
+✅ **Szybkie** - zoptymalizowana wydajność  
+✅ **Motywujące** - mechaniki gamifikacji w bilansie netto  
+✅ **Łatwe udostępnianie** w mediach społecznościowych  
 
 ---
 
 ## Punkty końcowe API
 
 ### Publiczne
-- `GET /health` - Status aplikacji
-- `GET /v1/nearby-stations` - Stacje rowerów w pobliżu
-- `GET /v1/search-nearest-station` - Wyszukaj najbliższą stację
-- `POST /v1/calculate-co2-savings` - Oblicz oszczędności CO₂
+- `GET /health` - status aplikacji
+- `GET /v1/nearby-stations` - stacje rowerowe w pobliżu
+- `GET /v1/search-nearest-station` - szukaj najbliższej stacji
+- `POST /v1/calculate-co2-savings` - oblicz oszczędności CO₂
 
-### Z autentykacją
-- `POST /v1/save-journey` - Zapisz podróż
+### Z autoryzacją
+- `POST /v1/save-journey` - zapisz podróż
 - `GET /v1/user-stats/{user_id}` - Twoje statystyki
-- `GET /v1/share-graphic/{user_id}` - Grafika oszczędności
-- `GET /v1/share-graphic-stats/{user_id}` - Grafika net balance
-
----
-
-## Baza danych
-
-### Tabele
-- **journey_tracking** - Historia podróży (rower/samochód)
-- **user_stats** - Statystyki użytkownika (net neutrality)
-- **co2_calculations** - Historyczne obliczenia
-
-### Bezpieczeństwo
-Wszystkie dane są:
-- Scoped do użytkownika (RLS policies)
-- Szyfrowane w przesyłaniu (HTTPS)
-- Zabezpieczone w bazie danych
-
----
-
-## Obliczenia
-
-### CO₂ Zaoszczędzony
-```
-CO₂ = odległość (km) × 0.12 kg/km
-```
-
-### Net Balance
-```
-Net = Całkowity CO₂ Zaoszczędzony - (Podróże samochodem × 10km × 0.12 kg/km)
-
-Jeśli Net ≥ 0: Net Pozytywny ✓ (zielony)
-Jeśli Net < 0: Net Negatywny ⚠️ (czerwony)
-```
-
-### Równoważność
-```
-1 drzewo neutralizuje: 0.021 kg CO₂ rocznie
-Drzewa = Całkowity CO₂ / 0.021
-```
-
----
-
-## Licencja
-
-GNU General Public License v3.0 - patrz [LICENSE](LICENSE)
-
----
-
-## Kontakt & Linki
-
-- **Demo**: https://hh25.morawski.my
-- **GitHub**: https://github.com/morawskidotmy/hackheroes25
-- **Issues**: GitHub Issues
-
----
-
-## Dzięki
-
-Hack Heroes 2025 - Projekt edukacyjny
-
----
-
-**Każda podróż rowerem ratuje planetę. 🌍🚴💚**
+- `
