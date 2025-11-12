@@ -173,21 +173,6 @@ def oblicz_co2():
         najblizszy_pojazd = pojazdy[0] if pojazdy else None
         
         id_obliczenia = None
-        if uzytkownik_id and klient_supabase:
-            try:
-                wynik = klient_supabase.table('co2_calculations').insert({
-                    'user_id': uzytkownik_id,
-                    'co2_savings_kg': round(oszczednosci_co2, 3),
-                    'distance_km': round(dystans, 2),
-                    'start_lat': lat,
-                    'start_lon': lon,
-                    'end_lat': dest_lat,
-                    'end_lon': dest_lon,
-                    'created_at': datetime.utcnow().isoformat()
-                }).execute()
-                id_obliczenia = wynik.data[0]['id'] if wynik.data else None
-            except Exception as e:
-                logger.warning(f"Nie udało się zapisać obliczenia: {e}")
         
         odpowiedz = {
             'success': True,
@@ -294,6 +279,21 @@ def zapisz_podroze():
         }
         
         wynik = klient_supabase.table('journey_tracking').insert(dane_podrozy).execute()
+        
+        if wybrany_transport == 'bike':
+            try:
+                klient_supabase.table('co2_calculations').insert({
+                    'user_id': uzytkownik_id,
+                    'co2_savings_kg': round(potencjalny_co2, 3),
+                    'distance_km': round(dystans, 2),
+                    'start_lat': lat,
+                    'start_lon': lon,
+                    'end_lat': dest_lat,
+                    'end_lon': dest_lon,
+                    'created_at': datetime.utcnow().isoformat()
+                }).execute()
+            except Exception as e:
+                logger.warning(f"Nie udało się zapisać obliczenia: {e}")
         
         aktualizuj_statystyki_uzytkownika(uzytkownik_id, wybrany_transport, potencjalny_co2, dystans)
         
