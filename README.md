@@ -1,4 +1,4 @@
-# 🚴 Zielony Pedał
+# sqrtco
 
 Aplikacja do śledzenia wpływu na klimat poprzez wybór roweru zamiast samochodu.
 
@@ -148,7 +148,7 @@ Drzewa = Całkowity CO₂ / 0.021
 
 ## Licencja
 
-MIT License - patrz [LICENSE](LICENSE)
+GNU General Public License v3.0 - patrz [LICENSE](LICENSE)
 
 ---
 
