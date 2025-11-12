@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CO2 Bike Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -21,6 +22,131 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+        }
+
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-modal.hidden {
+            display: none;
+        }
+
+        .auth-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .auth-box h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .auth-btn:hover {
+            border-color: #ffffff;
+            background: #222;
+        }
+
+        .auth-btn:active {
+            transform: scale(0.98);
+        }
+
+        .google-btn {
+            border-color: #4285f4;
+        }
+
+        .github-btn {
+            border-color: #ffffff;
+        }
+
+        .user-header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .logout-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
         }
 
         .container {
@@ -166,7 +292,6 @@
             text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
         }
 
-        /* BENTO BOX LAYOUT */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -261,7 +386,210 @@
             transform: scale(0.98);
         }
 
-        /* Tablet */
+        .share-section {
+            display: none;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .share-section.visible {
+            display: block;
+        }
+
+        .share-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+
+        .share-graphic {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .share-btn:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .copy-link {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .station-result {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .station-result.found {
+            border-color: #00ff00;
+        }
+
+        .station-result.not-found {
+            border-color: #ff6b6b;
+        }
+
+        .station-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff00;
+            margin-bottom: 8px;
+        }
+
+        .station-details {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .station-details span {
+            display: block;
+        }
+
+        .transport-choice-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .transport-choice-section.visible {
+            display: block;
+        }
+
+        .transport-choice-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .transport-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .transport-btn {
+            padding: 16px;
+            background: #222;
+            border: 2px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .transport-btn:hover {
+            border-color: #888;
+            color: #fff;
+        }
+
+        .transport-btn.bike {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .transport-btn.car {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .transport-btn.selected {
+            background: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .net-neutral-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #00ff00;
+            color: #000;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .net-neutral-badge.negative {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .save-journey-btn {
+            width: 100%;
+            padding: 14px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .save-journey-btn:hover {
+            background: #00dd00;
+        }
+
+        .save-journey-btn:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 800px) {
             .header h1 {
                 font-size: 36px;
@@ -290,7 +618,6 @@
             }
         }
 
-        /* Mobile */
         @media (max-width: 500px) {
             .header h1 {
                 font-size: 28px;
@@ -346,10 +673,44 @@
                 padding: 12px;
                 font-size: 13px;
             }
+
+            .user-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .user-info {
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-box">
+            <h2>Login</h2>
+            <div class="auth-buttons">
+                <button class="auth-btn google-btn" onclick="loginWithGoogle()">
+                    🔵 Google
+                </button>
+                <button class="auth-btn github-btn" onclick="loginWithGithub()">
+                    ⚫ GitHub
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Header (shown when logged in) -->
+    <div class="user-header" id="userHeader" style="display: none;">
+        <div class="user-info">
+            <div id="userName" style="font-size: 14px; font-weight: 500;"></div>
+            <div class="user-name" id="userEmail"></div>
+        </div>
+        <div class="user-avatar" id="userAvatar"></div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>CO₂ Saved</h1>
@@ -378,6 +739,19 @@
         <div class="button-group">
             <button id="calcBtn" onclick="calculate()">Calculate</button>
             <button class="location-btn" onclick="getLocation()">📍 My Location</button>
+            <button class="location-btn" onclick="searchNearestStation()">🔍 Find Station</button>
+        </div>
+
+        <div id="stationResult" class="station-result" style="display: none;"></div>
+
+        <div class="transport-choice-section" id="transportSection">
+            <label class="transport-choice-label">Choose your transport:</label>
+            <div class="transport-buttons">
+                <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Bike</button>
+                <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Car</button>
+            </div>
+            <div id="netNeutralInfo"></div>
+            <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Save Journey</button>
         </div>
 
         <div class="probe-section">
@@ -393,11 +767,186 @@
         </div>
 
         <div class="bento-grid" id="stats"></div>
+        
+        <!-- Share Section (shown after login) -->
+        <div class="share-section" id="shareSection">
+            <div class="share-title">Your Impact</div>
+            <img class="share-graphic" id="shareGraphic" src="" alt="CO2 Savings">
+            <div class="share-buttons">
+                <button class="share-btn" onclick="copyShareLink()">📋 Copy Link</button>
+                <button class="share-btn" onclick="shareGraphic()">📤 Share</button>
+            </div>
+            <div class="copy-link" id="shareLink" style="display: none;"></div>
+        </div>
+        
         <div class="message" id="message">Enter your start and end coordinates</div>
     </div>
 
     <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        let supabase = null;
+        let currentUser = null;
         let maxCO2 = 5;
+        let selectedTransport = null;
+        let currentCalculation = null;
+
+        // Initialize Supabase
+        function initSupabase() {
+            if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                console.log('Supabase not configured. Auth disabled.');
+                return;
+            }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        // Check auth on load
+        async function checkAuth() {
+            if (!supabase) return;
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                currentUser = session.user;
+                updateUserUI();
+                document.getElementById('authModal').classList.add('hidden');
+            } else {
+                document.getElementById('authModal').classList.remove('hidden');
+            }
+        }
+
+        async function loginWithGoogle() {
+            if (!supabase) {
+                alert('Supabase not configured');
+                return;
+            }
+
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            
+            if (error) alert('Login error: ' + error.message);
+        }
+
+        async function loginWithGithub() {
+            if (!supabase) {
+                alert('Supabase not configured');
+                return;
+            }
+
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'github',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            
+            if (error) alert('Login error: ' + error.message);
+        }
+
+        async function logout() {
+            if (!supabase) return;
+            
+            await supabase.auth.signOut();
+            currentUser = null;
+            document.getElementById('userHeader').style.display = 'none';
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+
+            document.getElementById('userName').textContent = currentUser.user_metadata?.full_name || 'User';
+            document.getElementById('userEmail').textContent = currentUser.email || '';
+            
+            const avatar = document.getElementById('userAvatar');
+            const avatarUrl = currentUser.user_metadata?.avatar_url;
+            
+            if (avatarUrl) {
+                avatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+            } else {
+                avatar.innerHTML = `<span style="font-size: 20px; line-height: 40px;">👤</span>`;
+            }
+
+            document.getElementById('userHeader').style.display = 'flex';
+            
+            // Show transport section if calculation exists
+            if (currentCalculation) {
+                document.getElementById('transportSection').classList.add('visible');
+            }
+            
+            // Load user stats
+            loadUserStats();
+        }
+
+        async function loadUserStats() {
+            if (!currentUser) return;
+            
+            try {
+                const response = await fetch(`/v1/user-stats/${currentUser.id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateShareSection(data, currentUser.id);
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        function updateShareSection(stats, userId) {
+            const shareSection = document.getElementById('shareSection');
+            const shareGraphic = document.getElementById('shareGraphic');
+            
+            if (stats.total_co2_kg > 0) {
+                // Update graphic URL
+                shareGraphic.src = `/v1/share-graphic/${userId}`;
+                shareSection.classList.add('visible');
+                
+                // Update title with net neutral status
+                const shareTitle = document.querySelector('.share-title');
+                if (stats.net_neutral) {
+                    shareTitle.innerHTML = '✓ Your Impact (Net Neutral)';
+                } else {
+                    shareTitle.textContent = 'Your Impact';
+                }
+            }
+        }
+
+        function copyShareLink() {
+            const userId = currentUser?.id;
+            if (!userId) return;
+            
+            const shareUrl = `${window.location.origin}?share=${userId}`;
+            const linkDiv = document.getElementById('shareLink');
+            linkDiv.textContent = shareUrl;
+            linkDiv.style.display = 'block';
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('✓ Link copied to clipboard!');
+            });
+        }
+
+        function shareGraphic() {
+            const userId = currentUser?.id;
+            if (!userId) return;
+            
+            const shareUrl = `${window.location.origin}?share=${userId}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My CO2 Savings',
+                    text: 'Check out how much CO2 I\'ve saved by choosing bikes!',
+                    url: shareUrl
+                });
+            } else {
+                copyShareLink();
+            }
+        }
 
         async function calculate() {
             const startLat = parseFloat(document.getElementById('startLat').value);
@@ -430,15 +979,29 @@
                         longitude: startLon,
                         destination_latitude: endLat,
                         destination_longitude: endLon,
+                        user_id: currentUser?.id
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
+                    currentCalculation = data;
                     updateProbe(data);
                     msg.textContent = data.message;
                     msg.classList.remove('error', 'loading');
+                    
+                    // Show transport choice section if user is logged in
+                    if (currentUser) {
+                        document.getElementById('transportSection').classList.add('visible');
+                    } else {
+                        document.getElementById('transportSection').classList.remove('visible');
+                    }
+                    
+                    // Reload user stats if logged in
+                    if (currentUser) {
+                        setTimeout(loadUserStats, 500);
+                    }
                 } else {
                     msg.textContent = '❌ ' + (data.error || 'Error calculating');
                     msg.classList.add('error');
@@ -538,7 +1101,168 @@
             );
         }
 
+        async function searchNearestStation() {
+            const startLat = parseFloat(document.getElementById('startLat').value);
+            const startLon = parseFloat(document.getElementById('startLon').value);
+            const msg = document.getElementById('message');
+            const stationResult = document.getElementById('stationResult');
+
+            if (!startLat || !startLon) {
+                msg.textContent = '❌ Please enter start coordinates first';
+                msg.classList.add('error');
+                return;
+            }
+
+            msg.textContent = '🔍 Searching for nearest station...';
+            msg.classList.remove('error');
+            msg.classList.add('loading');
+
+            try {
+                const response = await fetch(`/v1/search-nearest-station?latitude=${startLat}&longitude=${startLon}&radius=2.0`);
+                const data = await response.json();
+
+                if (data.success && data.found) {
+                    const station = data.station;
+                    stationResult.className = 'station-result found';
+                    stationResult.innerHTML = `
+                        <div class="station-name">🚲 ${station.name}</div>
+                        <div class="station-details">
+                            <span>📍 Bikes available: <strong>${station.bikes_available}</strong></span>
+                            <span>📏 Distance: <strong>${station.distance_km?.toFixed(2) || 'N/A'} km</strong></span>
+                        </div>
+                    `;
+                    stationResult.style.display = 'block';
+                    msg.textContent = '✓ Nearest station found!';
+                    msg.classList.remove('loading');
+                } else {
+                    stationResult.className = 'station-result not-found';
+                    stationResult.innerHTML = '<div class="station-name">❌ No stations found</div>';
+                    stationResult.style.display = 'block';
+                    msg.textContent = '❌ No bike stations found in your area';
+                    msg.classList.add('error');
+                }
+            } catch (error) {
+                msg.textContent = '❌ Search error: ' + error.message;
+                msg.classList.add('error');
+                stationResult.style.display = 'none';
+            }
+        }
+
+        function selectTransport(transport) {
+            selectedTransport = transport;
+            
+            // Update button states
+            document.getElementById('bikeBtnChoice').classList.remove('selected');
+            document.getElementById('carBtnChoice').classList.remove('selected');
+            
+            if (transport === 'bike') {
+                document.getElementById('bikeBtnChoice').classList.add('selected');
+            } else {
+                document.getElementById('carBtnChoice').classList.add('selected');
+            }
+
+            // Enable save button
+            document.getElementById('saveJourneyBtn').disabled = false;
+
+            // Update net neutral info
+            updateNetNeutralInfo();
+        }
+
+        function updateNetNeutralInfo() {
+            if (!currentUser || !selectedTransport) return;
+
+            const infoDiv = document.getElementById('netNeutralInfo');
+            if (selectedTransport === 'car') {
+                infoDiv.innerHTML = '<span class="net-neutral-badge negative">⚠️ This journey produces CO₂</span>';
+            } else {
+                infoDiv.innerHTML = '<span class="net-neutral-badge">✓ This journey saves CO₂</span>';
+            }
+        }
+
+        async function saveJourney() {
+            if (!currentUser) {
+                alert('Please login first');
+                return;
+            }
+
+            if (!selectedTransport) {
+                alert('Please select bike or car');
+                return;
+            }
+
+            const startLat = parseFloat(document.getElementById('startLat').value);
+            const startLon = parseFloat(document.getElementById('startLon').value);
+            const endLat = parseFloat(document.getElementById('endLat').value);
+            const endLon = parseFloat(document.getElementById('endLon').value);
+
+            if (!startLat || !startLon || !endLat || !endLon) {
+                alert('Please enter all coordinates');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveJourneyBtn');
+            saveBtn.disabled = true;
+
+            const stationResult = document.getElementById('stationResult');
+            let stationData = {};
+            if (stationResult.style.display !== 'none') {
+                const stationName = stationResult.querySelector('.station-name');
+                if (stationName) {
+                    stationData = {
+                        nearest_station_name: stationName.textContent.replace('🚲 ', '').trim()
+                    };
+                }
+            }
+
+            try {
+                const response = await fetch('/v1/save-journey', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        latitude: startLat,
+                        longitude: startLon,
+                        destination_latitude: endLat,
+                        destination_longitude: endLon,
+                        chosen_transport: selectedTransport,
+                        ...stationData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const msg = document.getElementById('message');
+                    msg.textContent = `✓ ${data.message}`;
+                    msg.classList.remove('error');
+                    msg.classList.add('loading');
+                    
+                    // Reload user stats
+                    setTimeout(loadUserStats, 500);
+                    
+                    // Reset
+                    setTimeout(() => {
+                        selectedTransport = null;
+                        document.getElementById('bikeBtnChoice').classList.remove('selected');
+                        document.getElementById('carBtnChoice').classList.remove('selected');
+                        saveBtn.disabled = true;
+                    }, 1000);
+                } else {
+                    alert('❌ Failed to save journey: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
         window.addEventListener('load', () => {
+            initSupabase();
+            checkAuth();
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {

@@ -5,10 +5,31 @@ Focused on MEVO - Polish bike sharing system
 """
 
 import math
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import logging
 from providers import MEVOProvider
+from io import BytesIO
+from datetime import datetime
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+try:
+    import supabase
+    SUPABASE_URL = os.getenv('SUPABASE_URL')
+    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+    SUPABASE_AVAILABLE = SUPABASE_URL and SUPABASE_KEY
+    if SUPABASE_AVAILABLE:
+        supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+    else:
+        supabase_client = None
+except ImportError:
+    SUPABASE_AVAILABLE = False
+    supabase_client = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,6 +107,55 @@ def health():
     }), 200
 
 
+@app.route('/v1/search-nearest-station', methods=['GET'])
+def search_nearest_station():
+    """
+    Search for nearest MEVO bike station.
+    
+    Query parameters:
+    - latitude: float (required)
+    - longitude: float (required)
+    - radius: float (optional, default 2.0)
+    """
+    try:
+        lat = request.args.get('latitude', type=float)
+        lon = request.args.get('longitude', type=float)
+        radius = request.args.get('radius', 2.0, type=float)
+        
+        if lat is None or lon is None:
+            return jsonify({'error': 'Missing latitude or longitude'}), 400
+        
+        is_valid, error_msg = validate_coordinates(lat, lon)
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
+        
+        vehicles = provider.get_vehicles(lat, lon, radius)
+        
+        if not vehicles:
+            return jsonify({
+                'success': True,
+                'found': False,
+                'message': 'No stations found nearby'
+            }), 200
+        
+        nearest = vehicles[0]
+        return jsonify({
+            'success': True,
+            'found': True,
+            'station': {
+                'name': nearest.get('name', 'MEVO Station'),
+                'latitude': nearest.get('latitude'),
+                'longitude': nearest.get('longitude'),
+                'bikes_available': nearest.get('bikes_available'),
+                'distance_km': nearest.get('distance_km')
+            }
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error in search_nearest_station: {e}")
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+
+
 @app.route('/v1/calculate-co2-savings', methods=['POST'])
 def calculate_co2():
     """
@@ -97,7 +167,8 @@ def calculate_co2():
         "longitude": float (required),
         "destination_latitude": float (required),
         "destination_longitude": float (required),
-        "radius": float (optional, default 2.0)
+        "radius": float (optional, default 2.0),
+        "user_id": string (optional, for tracking)
     }
     """
     try:
@@ -117,6 +188,7 @@ def calculate_co2():
         dest_lat = float(data['destination_latitude'])
         dest_lon = float(data['destination_longitude'])
         radius = float(data.get('radius', DEFAULT_RADIUS))
+        user_id = data.get('user_id')
         
         # Validate bounds
         is_valid, error_msg = validate_coordinates(lat, lon)
@@ -143,8 +215,27 @@ def calculate_co2():
         # Select closest vehicle or return success without vehicle
         closest_vehicle = vehicles[0] if vehicles else None
         
+        # Store in Supabase if user_id provided
+        calculation_id = None
+        if user_id and supabase_client:
+            try:
+                result = supabase_client.table('co2_calculations').insert({
+                    'user_id': user_id,
+                    'co2_savings_kg': round(co2_savings, 3),
+                    'distance_km': round(distance, 2),
+                    'start_lat': lat,
+                    'start_lon': lon,
+                    'end_lat': dest_lat,
+                    'end_lon': dest_lon,
+                    'created_at': datetime.utcnow().isoformat()
+                }).execute()
+                calculation_id = result.data[0]['id'] if result.data else None
+            except Exception as e:
+                logger.warning(f"Failed to store calculation: {e}")
+        
         response = {
             'success': True,
+            'id': calculation_id,
             'distance_km': round(distance, 2),
             'co2_savings_kg': round(co2_savings, 3),
             'travel_times': {
@@ -210,6 +301,242 @@ def nearby_stations():
     except Exception as e:
         logger.error(f"Error in nearby_stations: {e}")
         return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+
+
+@app.route('/v1/save-journey', methods=['POST'])
+def save_journey():
+    """
+    Save a journey with transport choice (bike or car).
+    
+    Request body:
+    {
+        "user_id": string (required),
+        "latitude": float (required),
+        "longitude": float (required),
+        "destination_latitude": float (required),
+        "destination_longitude": float (required),
+        "chosen_transport": string (required, 'bike' or 'car'),
+        "nearest_station_name": string (optional),
+        "nearest_station_lat": float (optional),
+        "nearest_station_lon": float (optional)
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        required_fields = ['user_id', 'latitude', 'longitude', 'destination_latitude', 
+                          'destination_longitude', 'chosen_transport']
+        if not all(field in data for field in required_fields):
+            return jsonify({
+                'error': 'Missing required fields',
+                'required': required_fields
+            }), 400
+        
+        user_id = data['user_id']
+        lat = float(data['latitude'])
+        lon = float(data['longitude'])
+        dest_lat = float(data['destination_latitude'])
+        dest_lon = float(data['destination_longitude'])
+        chosen_transport = data['chosen_transport'].lower()
+        
+        if chosen_transport not in ['bike', 'car']:
+            return jsonify({'error': 'chosen_transport must be "bike" or "car"'}), 400
+        
+        # Calculate distance and potential savings
+        distance = calculate_distance(lat, lon, dest_lat, dest_lon)
+        potential_co2 = calculate_co2_savings(distance)
+        
+        if not supabase_client:
+            return jsonify({'error': 'Database not available'}), 503
+        
+        # Save journey
+        journey_data = {
+            'user_id': user_id,
+            'start_lat': lat,
+            'start_lon': lon,
+            'end_lat': dest_lat,
+            'end_lon': dest_lon,
+            'distance_km': round(distance, 2),
+            'chosen_transport': chosen_transport,
+            'potential_co2_savings_kg': round(potential_co2, 3),
+            'nearest_station_name': data.get('nearest_station_name'),
+            'nearest_station_lat': data.get('nearest_station_lat'),
+            'nearest_station_lon': data.get('nearest_station_lon')
+        }
+        
+        result = supabase_client.table('journey_tracking').insert(journey_data).execute()
+        
+        # Update user stats
+        update_user_stats(user_id, chosen_transport, potential_co2)
+        
+        return jsonify({
+            'success': True,
+            'journey_id': result.data[0]['id'] if result.data else None,
+            'message': f"Journey saved: {chosen_transport.upper()} ({distance:.2f}km)"
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error in save_journey: {e}")
+        return jsonify({'error': 'Failed to save journey', 'details': str(e)}), 500
+
+
+def update_user_stats(user_id: str, transport: str, co2_saved: float):
+    """Update user stats in the user_stats table."""
+    try:
+        if not supabase_client:
+            return
+        
+        # Get current stats
+        result = supabase_client.table('user_stats').select('*').eq('user_id', user_id).execute()
+        
+        if result.data:
+            # Update existing
+            current = result.data[0]
+            new_co2 = current['total_co2_saved_kg'] + (co2_saved if transport == 'bike' else 0)
+            new_bike_count = current['total_bike_journeys'] + (1 if transport == 'bike' else 0)
+            new_car_count = current['total_car_journeys'] + (1 if transport == 'car' else 0)
+            
+            # Determine if net neutral (more CO2 saved than from car journeys)
+            estimated_car_co2 = new_car_count * CO2_PER_KM_CAR * 10  # Assume ~10km average
+            net_neutral = new_co2 >= estimated_car_co2
+            
+            supabase_client.table('user_stats').update({
+                'total_co2_saved_kg': round(new_co2, 3),
+                'total_bike_journeys': new_bike_count,
+                'total_car_journeys': new_car_count,
+                'net_neutral': net_neutral,
+                'last_updated': datetime.utcnow().isoformat()
+            }).eq('user_id', user_id).execute()
+        else:
+            # Create new
+            net_neutral = transport == 'bike'
+            supabase_client.table('user_stats').insert({
+                'user_id': user_id,
+                'total_co2_saved_kg': round(co2_saved if transport == 'bike' else 0, 3),
+                'total_bike_journeys': 1 if transport == 'bike' else 0,
+                'total_car_journeys': 1 if transport == 'car' else 0,
+                'net_neutral': net_neutral,
+                'last_updated': datetime.utcnow().isoformat()
+            }).execute()
+    except Exception as e:
+        logger.warning(f"Failed to update user stats: {e}")
+
+
+@app.route('/v1/user-stats/<user_id>', methods=['GET'])
+def get_user_stats(user_id):
+    """Get total CO2 savings and net neutrality status for a user."""
+    try:
+        if not supabase_client:
+            return jsonify({'error': 'Stats not available'}), 503
+        
+        # Get user stats
+        stats_result = supabase_client.table('user_stats').select(
+            '*'
+        ).eq('user_id', user_id).execute()
+        
+        if stats_result.data:
+            user_stat = stats_result.data[0]
+            total_co2 = user_stat['total_co2_saved_kg']
+            bike_journeys = user_stat['total_bike_journeys']
+            car_journeys = user_stat['total_car_journeys']
+            net_neutral = user_stat['net_neutral']
+        else:
+            total_co2 = 0
+            bike_journeys = 0
+            car_journeys = 0
+            net_neutral = False
+        
+        # Also get from co2_calculations for backwards compatibility
+        calc_result = supabase_client.table('co2_calculations').select(
+            'co2_savings_kg'
+        ).eq('user_id', user_id).execute()
+        
+        legacy_co2 = sum(item['co2_savings_kg'] for item in calc_result.data) if calc_result.data else 0
+        legacy_count = len(calc_result.data) if calc_result.data else 0
+        
+        return jsonify({
+            'success': True,
+            'user_id': user_id,
+            'total_co2_kg': round(total_co2 + legacy_co2, 2),
+            'total_co2_grams': int((total_co2 + legacy_co2) * 1000),
+            'bike_journeys': bike_journeys,
+            'car_journeys': car_journeys,
+            'net_neutral': net_neutral,
+            'trips_count': legacy_count + bike_journeys + car_journeys,
+            'equivalent_trees': round((total_co2 + legacy_co2) / 0.021, 2)
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error getting user stats: {e}")
+        return jsonify({'error': 'Failed to get stats', 'details': str(e)}), 500
+
+
+@app.route('/v1/share-graphic/<user_id>', methods=['GET'])
+def generate_share_graphic(user_id):
+    """Generate a shareable graphic of CO2 savings."""
+    try:
+        if not PIL_AVAILABLE:
+            return jsonify({'error': 'Image generation not available'}), 503
+        
+        if not supabase_client:
+            return jsonify({'error': 'Stats not available'}), 503
+        
+        # Get user stats
+        result = supabase_client.table('co2_calculations').select(
+            'co2_savings_kg'
+        ).eq('user_id', user_id).execute()
+        
+        total_co2 = sum(item['co2_savings_kg'] for item in result.data) if result.data else 0
+        count = len(result.data) if result.data else 0
+        
+        # Create image
+        width, height = 1200, 630
+        image = Image.new('RGB', (width, height), color='#000000')
+        draw = ImageDraw.Draw(image)
+        
+        try:
+            # Try to use nice fonts, fall back to default
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+            value_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+            label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
+        except:
+            title_font = ImageFont.load_default()
+            value_font = ImageFont.load_default()
+            label_font = ImageFont.load_default()
+        
+        # Draw background gradient effect (black to dark gray)
+        for y in range(height):
+            shade = int(20 * (y / height))
+            color = (shade, shade, shade)
+            draw.rectangle([(0, y), (width, y+1)], fill=color)
+        
+        # Draw green accent bar
+        draw.rectangle([(0, 0), (width, 8)], fill='#00ff00')
+        
+        # Draw main text
+        co2_text = f"{total_co2:.2f}"
+        draw.text((width//2, 200), co2_text, fill='#00ff00', font=value_font, anchor="mm")
+        
+        # Draw label
+        draw.text((width//2, 380), "KG CO₂ SAVED", fill='#ffffff', font=label_font, anchor="mm")
+        
+        # Draw trips count
+        trips_text = f"{count} trips"
+        draw.text((width//2, 480), trips_text, fill='#888888', font=label_font, anchor="mm")
+        
+        # Draw branding
+        draw.text((width//2, height-50), "co2.bike", fill='#666666', font=label_font, anchor="mm")
+        
+        # Save to bytes
+        img_io = BytesIO()
+        image.save(img_io, 'PNG', quality=95)
+        img_io.seek(0)
+        
+        return send_file(img_io, mimetype='image/png', as_attachment=False)
+    
+    except Exception as e:
+        logger.error(f"Error generating graphic: {e}")
+        return jsonify({'error': 'Failed to generate graphic', 'details': str(e)}), 500
 
 
 @app.route('/', methods=['GET'])
