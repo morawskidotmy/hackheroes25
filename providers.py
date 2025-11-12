@@ -1,7 +1,3 @@
-"""
-MEVO Bike Provider - Polish bike sharing (GBFS)
-"""
-
 import requests
 import math
 from typing import List, Dict
@@ -10,8 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calculate distance using Haversine formula (in km)."""
+def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
@@ -24,74 +19,68 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * c
 
 
-class MEVOProvider:
-    """MEVO - Polish bike sharing (GBFS)."""
+class Dostawa_MEVO:
     
     def __init__(self):
-        self.base_url = "https://gbfs.urbansharing.com/rowermevo.pl"
-        self.timeout = 5
-        self.client_identifier = "hackheroes-co2calculator"
+        self.adres_bazowy = "https://gbfs.urbansharing.com/rowermevo.pl"
+        self.limit_czasu = 5
+        self.identyfikator_klienta = "hackheroes-co2calculator"
     
-    def name(self) -> str:
+    def nazwa(self) -> str:
         return "MEVO"
     
-    def get_vehicles(self, latitude: float, longitude: float, radius: float) -> List[Dict]:
-        """Get MEVO bikes within radius."""
+    def pobierz_pojazdy(self, szerokosc: float, dlugosc: float, promien: float) -> List[Dict]:
         try:
-            vehicles = []
+            pojazdy = []
             
-            # Get station info
-            info_resp = requests.get(
-                f"{self.base_url}/station_information.json",
-                headers={"Client-Identifier": self.client_identifier},
-                timeout=self.timeout
+            odpowiedz_info = requests.get(
+                f"{self.adres_bazowy}/station_information.json",
+                headers={"Client-Identifier": self.identyfikator_klienta},
+                timeout=self.limit_czasu
             )
-            info_resp.raise_for_status()
-            station_info = info_resp.json()
+            odpowiedz_info.raise_for_status()
+            informacje_stacji = odpowiedz_info.json()
             
-            # Get station status
-            status_resp = requests.get(
-                f"{self.base_url}/station_status.json",
-                headers={"Client-Identifier": self.client_identifier},
-                timeout=self.timeout
+            odpowiedz_status = requests.get(
+                f"{self.adres_bazowy}/station_status.json",
+                headers={"Client-Identifier": self.identyfikator_klienta},
+                timeout=self.limit_czasu
             )
-            status_resp.raise_for_status()
-            station_status = status_resp.json()
+            odpowiedz_status.raise_for_status()
+            status_stacji = odpowiedz_status.json()
             
-            # Create status map
-            status_map = {}
-            for station in station_status['data']['stations']:
-                status_map[station['station_id']] = {
-                    'bikes': station['num_bikes_available'],
-                    'docks': station['num_docks_available'],
-                    'renting': station['is_renting'] == 1
+            mapa_statusu = {}
+            for stacja in status_stacji['data']['stations']:
+                mapa_statusu[stacja['station_id']] = {
+                    'bikes': stacja['num_bikes_available'],
+                    'docks': stacja['num_docks_available'],
+                    'renting': stacja['is_renting'] == 1
                 }
             
-            # Process stations
-            for station in station_info['data']['stations']:
-                status = status_map.get(station['station_id'], {})
+            for stacja in informacje_stacji['data']['stations']:
+                status = mapa_statusu.get(stacja['station_id'], {})
                 
                 if status.get('bikes', 0) == 0:
                     continue
                 
-                distance = calculate_distance(latitude, longitude, station['lat'], station['lon'])
-                if distance > radius:
+                dystans = oblicz_dystans(szerokosc, dlugosc, stacja['lat'], stacja['lon'])
+                if dystans > promien:
                     continue
                 
-                vehicles.append({
-                    'id': station['station_id'],
+                pojazdy.append({
+                    'id': stacja['station_id'],
                     'type': 'bike',
-                    'provider': self.name(),
-                    'name': station['name'],
-                    'location': {'latitude': station['lat'], 'longitude': station['lon']},
-                    'distance_km': round(distance, 2),
+                    'provider': self.nazwa(),
+                    'name': stacja['name'],
+                    'location': {'latitude': stacja['lat'], 'longitude': stacja['lon']},
+                    'distance_km': round(dystans, 2),
                     'bikes_available': status.get('bikes', 0),
                     'docks_available': status.get('docks', 0),
                     'is_available': True
                 })
             
-            return vehicles
+            return pojazdy
         
         except Exception as e:
-            logger.error(f"MEVO error: {e}")
+            logger.error(f"Błąd MEVO: {e}")
             return []

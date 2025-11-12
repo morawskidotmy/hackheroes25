@@ -1,85 +1,80 @@
 #!/bin/bash
 
-# Start script - Install dependencies and start server
-# Logs all results to test.log
+PLIK_LOGU="test.log"
 
-LOG_FILE="test.log"
+echo "Kalkulator CO2 Rowerów - Log Testowy" > $PLIK_LOGU
+echo "Rozpoczęto: $(date)" >> $PLIK_LOGU
+echo "================================================================================" >> $PLIK_LOGU
+echo "" >> $PLIK_LOGU
 
-# Clear log file
-echo "CO2 Bike Calculator - Test Log" > $LOG_FILE
-echo "Started: $(date)" >> $LOG_FILE
-echo "================================================================================" >> $LOG_FILE
-echo "" >> $LOG_FILE
-
-log_msg() {
-    echo "$1" >> $LOG_FILE
+zapisz_log() {
+    echo "$1" >> $PLIK_LOGU
 }
 
-echo "Installing dependencies..."
-log_msg "Installing dependencies..."
-pip install -q flask flask-cors requests 2>&1 | tee -a $LOG_FILE
+echo "Instalowanie zależności..."
+zapisz_log "Instalowanie zależności..."
+pip install -q flask flask-cors requests 2>&1 | tee -a $PLIK_LOGU
 
-echo "Starting server..."
-log_msg "Starting Flask server..."
+echo "Uruchamianie serwera..."
+zapisz_log "Uruchamianie serwera Flask..."
 python3 app.py &
-SERVER_PID=$!
+PID_SERWERA=$!
 
-echo "Server started (PID: $SERVER_PID)"
-log_msg "Server started with PID: $SERVER_PID"
-echo "Waiting 3 seconds for server to start..."
+echo "Serwer uruchomiony (PID: $PID_SERWERA)"
+zapisz_log "Serwer uruchomiony z PID: $PID_SERWERA"
+echo "Czekanie 3 sekundy na start serwera..."
 sleep 3
 
 echo ""
-log_msg ""
-log_msg "================================================================================"
-log_msg "API Tests"
-log_msg "================================================================================"
+zapisz_log ""
+zapisz_log "================================================================================"
+zapisz_log "Testy API"
+zapisz_log "================================================================================"
 
-echo "1. Testing /health endpoint..."
-log_msg ""
-log_msg "[TEST] Health check"
-RESULT=$(curl -s http://localhost:3000/health)
-echo "Status: PASS" >> $LOG_FILE
-echo "Output:" >> $LOG_FILE
-echo "$RESULT" >> $LOG_FILE
-echo "$RESULT" | python3 -m json.tool 2>/dev/null || echo "$RESULT"
+echo "1. Testowanie endpointu /health..."
+zapisz_log ""
+zapisz_log "[TEST] Sprawdzenie kondycji"
+WYNIK=$(curl -s http://localhost:3000/health)
+echo "Status: PASS" >> $PLIK_LOGU
+echo "Wyjście:" >> $PLIK_LOGU
+echo "$WYNIK" >> $PLIK_LOGU
+echo "$WYNIK" | python3 -m json.tool 2>/dev/null || echo "$WYNIK"
 sleep 1
 
-echo "2. Testing /v1/nearby-stations endpoint..."
-log_msg ""
-log_msg "[TEST] Nearby stations (Gdansk)"
-RESULT=$(curl -s "http://localhost:3000/v1/nearby-stations?latitude=54.3520&longitude=18.6466&radius=2")
-echo "Status: PASS" >> $LOG_FILE
-echo "Output:" >> $LOG_FILE
-echo "$RESULT" >> $LOG_FILE
-echo "$RESULT" | python3 -m json.tool 2>/dev/null || echo "$RESULT"
+echo "2. Testowanie endpointu /v1/nearby-stations..."
+zapisz_log ""
+zapisz_log "[TEST] Pobliskie stacje (Gdańsk)"
+WYNIK=$(curl -s "http://localhost:3000/v1/nearby-stations?latitude=54.3520&longitude=18.6466&radius=2")
+echo "Status: PASS" >> $PLIK_LOGU
+echo "Wyjście:" >> $PLIK_LOGU
+echo "$WYNIK" >> $PLIK_LOGU
+echo "$WYNIK" | python3 -m json.tool 2>/dev/null || echo "$WYNIK"
 sleep 1
 
-echo "3. Testing /v1/calculate-co2-savings endpoint..."
-log_msg ""
-log_msg "[TEST] CO2 calculation (Gdansk route)"
-RESULT=$(curl -s -X POST http://localhost:3000/v1/calculate-co2-savings \
+echo "3. Testowanie endpointu /v1/calculate-co2-savings..."
+zapisz_log ""
+zapisz_log "[TEST] Obliczenie CO2 (trasa Gdańsk)"
+WYNIK=$(curl -s -X POST http://localhost:3000/v1/calculate-co2-savings \
   -H "Content-Type: application/json" \
   -d '{"latitude": 54.3520, "longitude": 18.6466, "destination_latitude": 54.4000, "destination_longitude": 18.7000}')
-echo "Status: PASS" >> $LOG_FILE
-echo "Output:" >> $LOG_FILE
-echo "$RESULT" >> $LOG_FILE
-echo "$RESULT" | python3 -m json.tool 2>/dev/null || echo "$RESULT"
+echo "Status: PASS" >> $PLIK_LOGU
+echo "Wyjście:" >> $PLIK_LOGU
+echo "$WYNIK" >> $PLIK_LOGU
+echo "$WYNIK" | python3 -m json.tool 2>/dev/null || echo "$WYNIK"
 echo ""
 
 echo ""
 echo "================================================================================"
-echo "Server is running on http://localhost:3000"
-echo "Test log written to: $LOG_FILE"
-echo "Press Ctrl+C to stop"
+echo "Serwer działa na http://localhost:3000"
+echo "Log testów zapisany do: $PLIK_LOGU"
+echo "Naciśnij Ctrl+C aby zatrzymać"
 echo "================================================================================"
 echo ""
 
-log_msg ""
-log_msg "================================================================================"
-log_msg "All systems running!"
-log_msg "Ended: $(date)"
-log_msg "================================================================================"
+zapisz_log ""
+zapisz_log "================================================================================"
+zapisz_log "Wszystkie systemy uruchomione!"
+zapisz_log "Zakończono: $(date)"
+zapisz_log "================================================================================"
 
-# Keep server running
-wait $SERVER_PID
+wait $PID_SERWERA

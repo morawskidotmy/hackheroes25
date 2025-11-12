@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Start script - Install dependencies, start server, and run tests
-Logs all results to test.log
-"""
 
 import subprocess
 import time
@@ -11,91 +7,84 @@ import signal
 import os
 from datetime import datetime
 
-# Color output
-GREEN = '\033[92m'
-BLUE = '\033[94m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
+ZIELONY = '\033[92m'
+NIEBIESKI = '\033[94m'
+ZOLTY = '\033[93m'
+CZERWONY = '\033[91m'
 RESET = '\033[0m'
 
-LOG_FILE = 'test.log'
+PLIK_LOGU = 'test.log'
 
-def print_status(msg, color=BLUE):
-    print(f"{color}[*] {msg}{RESET}")
+def drukuj_status(msg, kolor=NIEBIESKI):
+    print(f"{kolor}[*] {msg}{RESET}")
 
-def print_success(msg):
-    print(f"{GREEN}[✓] {msg}{RESET}")
+def drukuj_sukces(msg):
+    print(f"{ZIELONY}[✓] {msg}{RESET}")
 
-def print_error(msg):
-    print(f"{RED}[✗] {msg}{RESET}")
+def drukuj_blad(msg):
+    print(f"{CZERWONY}[✗] {msg}{RESET}")
 
-def print_warning(msg):
-    print(f"{YELLOW}[!] {msg}{RESET}")
+def drukuj_ostrzezenie(msg):
+    print(f"{ZOLTY}[!] {msg}{RESET}")
 
-def log_write(msg):
-    """Write to log file"""
-    with open(LOG_FILE, 'a') as f:
+def zapisz_log(msg):
+    with open(PLIK_LOGU, 'a') as f:
         f.write(msg + '\n')
 
-def log_clear():
-    """Clear log file"""
-    with open(LOG_FILE, 'w') as f:
-        f.write(f"CO2 Bike Calculator - Test Log\n")
-        f.write(f"Started: {datetime.now()}\n")
+def czysc_log():
+    with open(PLIK_LOGU, 'w') as f:
+        f.write(f"Kalkulator CO2 Rowerów - Log Testowy\n")
+        f.write(f"Rozpoczęto: {datetime.now()}\n")
         f.write("=" * 80 + "\n\n")
 
-# Track subprocesses
-processes = []
+procesy = []
 
-def cleanup(signum, frame):
-    """Kill all subprocesses on exit"""
-    print_warning("Shutting down...")
-    log_write("\n" + "=" * 80)
-    log_write(f"Shutdown: {datetime.now()}")
+def czyszczenie(signum, frame):
+    drukuj_ostrzezenie("Zamykanie...")
+    zapisz_log("\n" + "=" * 80)
+    zapisz_log(f"Zamknięto: {datetime.now()}")
     
-    for proc in processes:
+    for proc in procesy:
         try:
             proc.terminate()
             proc.wait(timeout=2)
         except:
             proc.kill()
-    print_status("Cleanup complete")
+    drukuj_status("Czyszczenie ukończone")
     sys.exit(0)
 
-signal.signal(signal.SIGINT, cleanup)
-signal.signal(signal.SIGTERM, cleanup)
+signal.signal(signal.SIGINT, czyszczenie)
+signal.signal(signal.SIGTERM, czyszczenie)
 
-def run_cmd(cmd, name):
-    """Run command in subprocess and log output"""
+def uruchom_cmd(cmd, nazwa):
     try:
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        processes.append(proc)
+        procesy.append(proc)
         stdout, stderr = proc.communicate()
         
-        log_write(f"\n[TEST] {name}")
-        log_write(f"Command: {cmd}")
-        log_write(f"Status: {'PASS' if proc.returncode == 0 else 'FAIL'}")
+        zapisz_log(f"\n[TEST] {nazwa}")
+        zapisz_log(f"Polecenie: {cmd}")
+        zapisz_log(f"Status: {'PASS' if proc.returncode == 0 else 'FAIL'}")
         
         if stdout:
-            log_write(f"Output:\n{stdout}")
+            zapisz_log(f"Wyjście:\n{stdout}")
         if stderr:
-            log_write(f"Error:\n{stderr}")
+            zapisz_log(f"Błąd:\n{stderr}")
         
         if proc.returncode == 0:
-            print_success(f"{name}")
+            drukuj_sukces(f"{nazwa}")
             return True
         else:
-            print_error(f"{name}")
+            drukuj_blad(f"{nazwa}")
             if stderr:
-                print(f"  Error: {stderr[:100]}")
+                print(f"  Błąd: {stderr[:100]}")
             return False
     except Exception as e:
-        print_error(f"{name} error: {e}")
-        log_write(f"\nException in {name}: {e}")
+        drukuj_blad(f"{nazwa} błąd: {e}")
+        zapisz_log(f"\nWyjątek w {nazwa}: {e}")
         return False
 
-def start_server():
-    """Start Flask server in background subprocess"""
+def uruchom_serwer():
     try:
         proc = subprocess.Popen(
             "python3 app.py",
@@ -105,95 +94,89 @@ def start_server():
             text=True,
             preexec_fn=os.setsid
         )
-        processes.append(proc)
-        print_success("Server started (PID: {})".format(proc.pid))
-        log_write(f"Server started with PID: {proc.pid}")
+        procesy.append(proc)
+        drukuj_sukces("Serwer uruchomiony (PID: {})".format(proc.pid))
+        zapisz_log(f"Serwer uruchomiony z PID: {proc.pid}")
         return proc
     except Exception as e:
-        print_error(f"Failed to start server: {e}")
-        log_write(f"Failed to start server: {e}")
+        drukuj_blad(f"Nie udało się uruchomić serwera: {e}")
+        zapisz_log(f"Nie udało się uruchomić serwera: {e}")
         return None
 
-def test_api():
-    """Test API endpoints"""
-    print_status("Waiting 3 seconds for server to start...")
+def testuj_api():
+    drukuj_status("Czekanie 3 sekundy na start serwera...")
     time.sleep(3)
     
-    log_write("\n" + "-" * 80)
-    log_write("API Tests")
-    log_write("-" * 80)
+    zapisz_log("\n" + "-" * 80)
+    zapisz_log("Testy API")
+    zapisz_log("-" * 80)
     
-    print_status("Testing /health endpoint...")
-    run_cmd(
+    drukuj_status("Testowanie endpointu /health...")
+    uruchom_cmd(
         'curl -s http://localhost:3000/health',
-        "Health check"
+        "Sprawdzenie kondycji"
     )
     time.sleep(1)
     
-    print_status("Testing /v1/nearby-stations endpoint...")
-    run_cmd(
+    drukuj_status("Testowanie endpointu /v1/nearby-stations...")
+    uruchom_cmd(
         'curl -s "http://localhost:3000/v1/nearby-stations?latitude=54.3520&longitude=18.6466&radius=2"',
-        "Nearby stations (Gdansk)"
+        "Pobliskie stacje (Gdańsk)"
     )
     time.sleep(1)
     
-    print_status("Testing /v1/calculate-co2-savings endpoint...")
-    run_cmd(
+    drukuj_status("Testowanie endpointu /v1/calculate-co2-savings...")
+    uruchom_cmd(
         '''curl -s -X POST http://localhost:3000/v1/calculate-co2-savings \\
           -H "Content-Type: application/json" \\
           -d '{"latitude": 54.3520, "longitude": 18.6466, "destination_latitude": 54.4000, "destination_longitude": 18.7000}' ''',
-        "CO2 calculation (Gdansk route)"
+        "Obliczenie CO2 (trasa Gdańsk)"
     )
 
 def main():
-    # Clear log file
-    log_clear()
+    czysc_log()
     
-    print_status("Starting CO2 Bike Calculator...")
-    log_write("Starting CO2 Bike Calculator...\n")
+    drukuj_status("Uruchamianie Kalkulatora CO2 Rowerów...")
+    zapisz_log("Uruchamianie Kalkulatora CO2 Rowerów...\n")
     print()
     
-    # Install dependencies
-    print_status("Installing dependencies...")
-    log_write("Installing dependencies...")
-    if not run_cmd("pip install -q flask flask-cors requests 2>&1", "Dependency installation"):
-        print_warning("Some dependencies may not have installed, continuing anyway...")
-        log_write("WARNING: Some dependencies may not have installed")
+    drukuj_status("Instalowanie zależności...")
+    zapisz_log("Instalowanie zależności...")
+    if not uruchom_cmd("pip install -q flask flask-cors requests 2>&1", "Instalacja zależności"):
+        drukuj_ostrzezenie("Niektóre zależności mogą nie być zainstalowane, kontynuowanie...")
+        zapisz_log("OSTRZEŻENIE: Niektóre zależności mogą nie być zainstalowane")
     print()
     
-    # Start server
-    print_status("Starting Flask server...")
-    log_write("\nStarting Flask server...")
-    server_proc = start_server()
-    if not server_proc:
-        print_error("Failed to start server")
-        log_write("CRITICAL: Failed to start server")
+    drukuj_status("Uruchamianie serwera Flask...")
+    zapisz_log("\nUruchamianie serwera Flask...")
+    proc_serwera = uruchom_serwer()
+    if not proc_serwera:
+        drukuj_blad("Nie udało się uruchomić serwera")
+        zapisz_log("KRYTYCZNE: Nie udało się uruchomić serwera")
         return 1
     time.sleep(2)
     print()
     
-    # Run tests
-    print_status("Running API tests...")
-    log_write("\nRunning API tests...")
-    test_api()
+    drukuj_status("Uruchamianie testów API...")
+    zapisz_log("\nUruchamianie testów API...")
+    testuj_api()
     print()
     
-    # Keep server running
-    print_success("All systems running!")
-    log_write("\n" + "=" * 80)
-    log_write("All systems running successfully!")
-    log_write(f"Server started: {datetime.now()}")
-    log_write("=" * 80)
+    drukuj_sukces("Wszystkie systemy uruchomione!")
+    zapisz_log("\n" + "=" * 80)
+    zapisz_log("Wszystkie systemy uruchomione pomyślnie!")
+    zapisz_log(f"Serwer uruchomiony: {datetime.now()}")
+    zapisz_log("=" * 80)
     
-    print_status("Server is running on http://localhost:3000")
-    print_status(f"Test log: {LOG_FILE}")
-    print_status("Press Ctrl+C to stop")
+    drukuj_status("Serwer działa na http://localhost:3000")
+    drukuj_status(f"Log testów: {PLIK_LOGU}")
+    drukuj_status("Naciśnij Ctrl+C aby zatrzymać")
     print()
     
     try:
-        server_proc.wait()
+        proc_serwera.wait()
     except KeyboardInterrupt:
-        cleanup(None, None)
+        czyszczenie(None, None)
 
 if __name__ == '__main__':
     sys.exit(main())

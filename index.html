@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CO2 Bike Calculator</title>
+    <title>Zielony Pedał - Śledzenie wpływu na klimat</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -177,6 +177,13 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            color: #00ff00;
+            margin-top: 10px;
+            font-weight: 500;
         }
 
         .input-section {
@@ -690,10 +697,9 @@
     </style>
 </head>
 <body>
-    <!-- Auth Modal -->
     <div class="auth-modal" id="authModal">
         <div class="auth-box">
-            <h2>Login</h2>
+            <h2>Zaloguj się</h2>
             <div class="auth-buttons" id="authButtons">
                 <button class="auth-btn discord-btn" onclick="loginWithDiscord()">
                     🎮 Discord
@@ -703,71 +709,71 @@
                 </button>
             </div>
             <div id="emailAuthForm" style="display: none; margin-top: 20px;">
-                <input type="email" id="emailInput" placeholder="your@email.com" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
-                <input type="password" id="passwordInput" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
-                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Sign Up</button>
-                <button onclick="loginEmail()" style="width: 100%; padding: 10px; background: #555; color: #fff; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Login</button>
-                <button onclick="hideEmailAuth()" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 6px; cursor: pointer;">Back</button>
+                <input type="email" id="emailInput" placeholder="twoj@email.com" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
+                <input type="password" id="passwordInput" placeholder="Hasło" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
+                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Stwórz konto</button>
+                <button onclick="loginEmail()" style="width: 100%; padding: 10px; background: #555; color: #fff; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Zaloguj się</button>
+                <button onclick="hideEmailAuth()" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 6px; cursor: pointer;">Wróć</button>
             </div>
         </div>
     </div>
 
-    <!-- User Header (shown when logged in) -->
     <div class="user-header" id="userHeader" style="display: none;">
         <div class="user-info">
             <div id="userName" style="font-size: 14px; font-weight: 500;"></div>
             <div class="user-name" id="userEmail"></div>
         </div>
         <div class="user-avatar" id="userAvatar"></div>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <button class="logout-btn" onclick="logout()">Wyloguj</button>
     </div>
 
     <div class="container">
-        <div class="header">
-            <h1>CO₂ Saved</h1>
-            <p>Choose a bike instead of a car</p>
-        </div>
+         <div class="header">
+             <h1>🚴 ZIELONY PEDAŁ</h1>
+             <p>Śledzenie wpływu na klimat</p>
+             <div class="tagline">Każda podróż rowerem ratuje planetę</div>
+         </div>
 
         <div class="input-section">
             <div class="input-group">
-                <label>Start Latitude</label>
+                <label>Szerokość geograficzna (start)</label>
                 <input type="number" id="startLat" placeholder="54.3520" step="0.0001">
             </div>
             <div class="input-group">
-                <label>Start Longitude</label>
+                <label>Długość geograficzna (start)</label>
                 <input type="number" id="startLon" placeholder="18.6466" step="0.0001">
             </div>
             <div class="input-group">
-                <label>End Latitude</label>
+                <label>Szerokość geograficzna (koniec)</label>
                 <input type="number" id="endLat" placeholder="54.4000" step="0.0001">
             </div>
             <div class="input-group">
-                <label>End Longitude</label>
+                <label>Długość geograficzna (koniec)</label>
                 <input type="number" id="endLon" placeholder="18.7000" step="0.0001">
             </div>
         </div>
 
         <div class="button-group">
-            <button id="calcBtn" onclick="calculate()">Calculate</button>
-            <button class="location-btn" onclick="getLocation()">📍 My Location</button>
-            <button class="location-btn" onclick="searchNearestStation()">🔍 Find Station</button>
+            <button id="calcBtn" onclick="calculate()">Oblicz</button>
+            <button class="location-btn" onclick="getLocation()">📍 Moja lokalizacja</button>
+            <button class="location-btn" onclick="searchNearestStation()">🔍 Wyszukaj stację</button>
         </div>
 
         <div id="stationResult" class="station-result" style="display: none;"></div>
 
         <div class="transport-choice-section" id="transportSection">
-            <label class="transport-choice-label">Choose your transport:</label>
+            <label class="transport-choice-label">Wybierz środek transportu:</label>
             <div class="transport-buttons">
-                <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Bike</button>
-                <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Car</button>
+                <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Rower</button>
+                <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Samochód</button>
             </div>
             <div id="netNeutralInfo"></div>
-            <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Save Journey</button>
+            <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Zapisz podróż</button>
         </div>
 
         <div class="probe-section">
             <div class="probe-label">
-                <span>CO₂ SAVED (kg)</span>
+                <span>CO₂ OSZCZĘDZONY (kg)</span>
                 <span id="probeValue">0 kg</span>
             </div>
             <div class="probe-container">
@@ -778,19 +784,19 @@
         </div>
 
         <div class="bento-grid" id="stats"></div>
+         
+          <div class="share-section" id="shareSection">
+             <div class="share-title">Twój wpływ</div>
+             <img class="share-graphic" id="shareGraphic" src="" alt="Oszczędności CO2">
+             <div class="share-buttons">
+                 <button class="share-btn" onclick="copyShareLink()">📋 Skopiuj link</button>
+                 <button class="share-btn" onclick="shareGraphic()">📤 Udostępnij</button>
+                 <button class="share-btn" onclick="shareStatsGraphic()">🌍 Net Balance</button>
+             </div>
+             <div class="copy-link" id="shareLink" style="display: none;"></div>
+         </div>
         
-        <!-- Share Section (shown after login) -->
-        <div class="share-section" id="shareSection">
-            <div class="share-title">Your Impact</div>
-            <img class="share-graphic" id="shareGraphic" src="" alt="CO2 Savings">
-            <div class="share-buttons">
-                <button class="share-btn" onclick="copyShareLink()">📋 Copy Link</button>
-                <button class="share-btn" onclick="shareGraphic()">📤 Share</button>
-            </div>
-            <div class="copy-link" id="shareLink" style="display: none;"></div>
-        </div>
-        
-        <div class="message" id="message">Enter your start and end coordinates</div>
+        <div class="message" id="message">Wprowadź współrzędne początkowe i końcowe</div>
     </div>
 
     <script>
@@ -803,16 +809,14 @@
         let selectedTransport = null;
         let currentCalculation = null;
 
-        // Initialize Supabase
         function initSupabase() {
             if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-                console.log('Supabase not configured. Auth disabled.');
+                console.log('Supabase nie skonfigurowany. Autentykacja wyłączona.');
                 return;
             }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
-        // Check auth on load
         async function checkAuth() {
             if (!supabase) return;
             
@@ -842,7 +846,7 @@
 
         async function loginWithDiscord() {
             if (!supabase) {
-                alert('Supabase not configured');
+                alert('Supabase nie skonfigurowany');
                 return;
             }
 
@@ -853,61 +857,61 @@
                 }
             });
             
-            if (error) alert('Login error: ' + error.message);
+            if (error) alert('Błąd logowania: ' + error.message);
         }
 
         async function signUpEmail() {
-            if (!supabase) {
-                alert('Supabase not configured');
-                return;
-            }
+             if (!supabase) {
+                 alert('Supabase nie skonfigurowany');
+                 return;
+             }
 
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
+             const email = document.getElementById('emailInput').value;
+             const password = document.getElementById('passwordInput').value;
 
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
+             if (!email || !password) {
+                 alert('Wpisz email i hasło');
+                 return;
+             }
 
-            const { error } = await supabase.auth.signUp({
-                email,
-                password
-            });
+             const { error } = await supabase.auth.signUp({
+                 email,
+                 password
+             });
 
-            if (error) {
-                alert('Sign up error: ' + error.message);
-            } else {
-                alert('Sign up successful! Check your email for confirmation.');
-                hideEmailAuth();
-            }
-        }
+             if (error) {
+                 alert('Błąd rejestracji: ' + error.message);
+             } else {
+                 alert('Rejestracja udana! Sprawdź swój email w celu potwierdzenia.');
+                 hideEmailAuth();
+             }
+         }
 
         async function loginEmail() {
-            if (!supabase) {
-                alert('Supabase not configured');
-                return;
-            }
+             if (!supabase) {
+                 alert('Supabase nie skonfigurowany');
+                 return;
+             }
 
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
+             const email = document.getElementById('emailInput').value;
+             const password = document.getElementById('passwordInput').value;
 
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
+             if (!email || !password) {
+                 alert('Wpisz email i hasło');
+                 return;
+             }
 
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+             const { error } = await supabase.auth.signInWithPassword({
+                 email,
+                 password
+             });
 
-            if (error) {
-                alert('Login error: ' + error.message);
-            } else {
-                hideEmailAuth();
-            }
-        }
+             if (error) {
+                 alert('Błąd logowania: ' + error.message);
+             } else {
+                 hideEmailAuth();
+             }
+         }
 
         async function logout() {
             if (!supabase) return;
@@ -935,13 +939,11 @@
 
             document.getElementById('userHeader').style.display = 'flex';
             
-            // Show transport section if calculation exists
             if (currentCalculation) {
-                document.getElementById('transportSection').classList.add('visible');
-            }
-            
-            // Load user stats
-            loadUserStats();
+                 document.getElementById('transportSection').classList.add('visible');
+             }
+             
+             loadUserStats();
         }
 
         async function loadUserStats() {
@@ -955,28 +957,26 @@
                     updateShareSection(data, currentUser.id);
                 }
             } catch (error) {
-                console.error('Failed to load stats:', error);
+                console.error('Nie udało się załadować statystyk:', error);
             }
         }
 
         function updateShareSection(stats, userId) {
-            const shareSection = document.getElementById('shareSection');
-            const shareGraphic = document.getElementById('shareGraphic');
-            
-            if (stats.total_co2_kg > 0) {
-                // Update graphic URL
-                shareGraphic.src = `/v1/share-graphic/${userId}`;
-                shareSection.classList.add('visible');
-                
-                // Update title with net neutral status
-                const shareTitle = document.querySelector('.share-title');
-                if (stats.net_neutral) {
-                    shareTitle.innerHTML = '✓ Your Impact (Net Neutral)';
-                } else {
-                    shareTitle.textContent = 'Your Impact';
-                }
-            }
-        }
+             const shareSection = document.getElementById('shareSection');
+             const shareGraphic = document.getElementById('shareGraphic');
+             
+             if (stats.total_co2_kg > 0) {
+                 shareGraphic.src = `/v1/share-graphic/${userId}`;
+                 shareSection.classList.add('visible');
+                 
+                 const shareTitle = document.querySelector('.share-title');
+                 if (stats.net_neutral) {
+                     shareTitle.innerHTML = '✓ Twój wpływ (Net Pozytywny)';
+                 } else {
+                     shareTitle.textContent = 'Twój wpływ';
+                 }
+             }
+         }
 
         function copyShareLink() {
             const userId = currentUser?.id;
@@ -988,8 +988,8 @@
             linkDiv.style.display = 'block';
             
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('✓ Link copied to clipboard!');
-            });
+                 alert('✓ Link skopiowany do schowka!');
+             });
         }
 
         function shareGraphic() {
@@ -1000,13 +1000,31 @@
             
             if (navigator.share) {
                 navigator.share({
-                    title: 'My CO2 Savings',
-                    text: 'Check out how much CO2 I\'ve saved by choosing bikes!',
+                    title: 'Moje oszczędności CO₂',
+                    text: 'Sprawdź, ile CO₂ oszczędzam, wybierając rower zamiast samochodu!',
                     url: shareUrl
                 });
             } else {
                 copyShareLink();
             }
+        }
+
+        function shareStatsGraphic() {
+            const userId = currentUser?.id;
+            if (!userId) return;
+            
+            const graphicUrl = `/v1/share-graphic-stats/${userId}`;
+            
+            // Open the graphic in a new tab
+            const link = document.createElement('a');
+            link.href = graphicUrl;
+            link.target = '_blank';
+            link.download = `my-carbon-impact-${userId}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('✓ Grafika pobrana! Udostępnij ją na mediach społecznych.');
         }
 
         async function calculate() {
@@ -1019,13 +1037,13 @@
             const msg = document.getElementById('message');
 
             if (!startLat || !startLon || !endLat || !endLon) {
-                msg.textContent = '❌ Please enter all coordinates';
+                msg.textContent = '❌ Wprowadź wszystkie współrzędne';
                 msg.classList.add('error');
                 return;
             }
 
             btn.disabled = true;
-            msg.textContent = '🔄 Calculating...';
+            msg.textContent = '🔄 Liczę...';
             msg.classList.remove('error');
             msg.classList.add('loading');
 
@@ -1052,23 +1070,21 @@
                     msg.textContent = data.message;
                     msg.classList.remove('error', 'loading');
                     
-                    // Show transport choice section if user is logged in
                     if (currentUser) {
-                        document.getElementById('transportSection').classList.add('visible');
-                    } else {
-                        document.getElementById('transportSection').classList.remove('visible');
-                    }
-                    
-                    // Reload user stats if logged in
-                    if (currentUser) {
-                        setTimeout(loadUserStats, 500);
-                    }
+                         document.getElementById('transportSection').classList.add('visible');
+                     } else {
+                         document.getElementById('transportSection').classList.remove('visible');
+                     }
+                     
+                     if (currentUser) {
+                         setTimeout(loadUserStats, 500);
+                     }
                 } else {
-                    msg.textContent = '❌ ' + (data.error || 'Error calculating');
+                    msg.textContent = '❌ ' + (data.error || 'Błąd obliczeń');
                     msg.classList.add('error');
                 }
             } catch (error) {
-                msg.textContent = '❌ Connection error: ' + error.message;
+                msg.textContent = '❌ Błąd połączenia: ' + error.message;
                 msg.classList.add('error');
             } finally {
                 btn.disabled = false;
@@ -1098,35 +1114,35 @@
             stats.innerHTML = `
                 <div class="bento-box bento-box-large">
                     <div class="bento-value large">${co2.toFixed(2)}</div>
-                    <div class="bento-label">CO₂ Saved (kg)</div>
+                    <div class="bento-label">CO₂ Oszczędzony (kg)</div>
                 </div>
                 <div class="bento-box">
                     <div class="bento-value">${distance.toFixed(1)}</div>
-                    <div class="bento-label">Distance (km)</div>
+                    <div class="bento-label">Odległość (km)</div>
                 </div>
                 <div class="bento-box">
                     <div class="bento-value">${impact.co2_saved_grams}</div>
-                    <div class="bento-label">Grams CO₂</div>
+                    <div class="bento-label">Gramy CO₂</div>
                 </div>
                 <div class="bento-box">
                     <div class="bento-value">${impact.equivalent_trees.toFixed(1)}</div>
-                    <div class="bento-label">Trees Saved</div>
+                    <div class="bento-label">Uratowane drzewa</div>
                 </div>
                 <div class="bento-box-wide">
                     <div style="display: flex; gap: 40px;">
                         <div>
                             <div class="bento-value">${travelTime.bike_minutes}</div>
-                            <div class="bento-label">By Bike</div>
+                            <div class="bento-label">Rowerem</div>
                         </div>
                         <div>
                             <div class="bento-value">${travelTime.car_minutes}</div>
-                            <div class="bento-label">By Car</div>
+                            <div class="bento-label">Samochodem</div>
                         </div>
                     </div>
                 </div>
                 ${vehicle ? `<div class="bento-box">
                     <div class="bento-value">${vehicle.bikes_available}</div>
-                    <div class="bento-label">Bikes Near You</div>
+                    <div class="bento-label">Rowery w pobliżu</div>
                 </div>` : ''}
             `;
         }
@@ -1136,13 +1152,13 @@
             const msg = document.getElementById('message');
 
             if (!navigator.geolocation) {
-                msg.textContent = '❌ Geolocation not supported';
+                msg.textContent = '❌ Geolokalizacja nie jest wspierana';
                 msg.classList.add('error');
                 return;
             }
 
             btn.disabled = true;
-            msg.textContent = '📍 Getting location...';
+            msg.textContent = '📍 Pobieranie lokalizacji...';
             msg.classList.remove('error');
             msg.classList.add('loading');
 
@@ -1150,12 +1166,12 @@
                 (position) => {
                     document.getElementById('startLat').value = position.coords.latitude.toFixed(4);
                     document.getElementById('startLon').value = position.coords.longitude.toFixed(4);
-                    msg.textContent = '✓ Location set. Enter destination and calculate.';
+                    msg.textContent = '✓ Lokalizacja ustawiona. Wprowadź cel i liczę.';
                     msg.classList.remove('loading');
                     btn.disabled = false;
                 },
                 (error) => {
-                    msg.textContent = '❌ Location error: ' + error.message;
+                    msg.textContent = '❌ Błąd lokalizacji: ' + error.message;
                     msg.classList.add('error');
                     btn.disabled = false;
                 }
@@ -1169,12 +1185,12 @@
             const stationResult = document.getElementById('stationResult');
 
             if (!startLat || !startLon) {
-                msg.textContent = '❌ Please enter start coordinates first';
+                msg.textContent = '❌ Najpierw wprowadź współrzędne';
                 msg.classList.add('error');
                 return;
             }
 
-            msg.textContent = '🔍 Searching for nearest station...';
+            msg.textContent = '🔍 Szukam najbliższej stacji...';
             msg.classList.remove('error');
             msg.classList.add('loading');
 
@@ -1188,22 +1204,22 @@
                     stationResult.innerHTML = `
                         <div class="station-name">🚲 ${station.name}</div>
                         <div class="station-details">
-                            <span>📍 Bikes available: <strong>${station.bikes_available}</strong></span>
-                            <span>📏 Distance: <strong>${station.distance_km?.toFixed(2) || 'N/A'} km</strong></span>
+                            <span>📍 Dostępne rowery: <strong>${station.bikes_available}</strong></span>
+                            <span>📏 Odległość: <strong>${station.distance_km?.toFixed(2) || 'N/A'} km</strong></span>
                         </div>
                     `;
                     stationResult.style.display = 'block';
-                    msg.textContent = '✓ Nearest station found!';
+                    msg.textContent = '✓ Znalazłem najbliższą stację!';
                     msg.classList.remove('loading');
                 } else {
                     stationResult.className = 'station-result not-found';
-                    stationResult.innerHTML = '<div class="station-name">❌ No stations found</div>';
+                    stationResult.innerHTML = '<div class="station-name">❌ Brak stacji w pobliżu</div>';
                     stationResult.style.display = 'block';
-                    msg.textContent = '❌ No bike stations found in your area';
+                    msg.textContent = '❌ Brak stacji rowerowych w Twojej okolicy';
                     msg.classList.add('error');
                 }
             } catch (error) {
-                msg.textContent = '❌ Search error: ' + error.message;
+                msg.textContent = '❌ Błąd wyszukiwania: ' + error.message;
                 msg.classList.add('error');
                 stationResult.style.display = 'none';
             }
@@ -1222,11 +1238,9 @@
                 document.getElementById('carBtnChoice').classList.add('selected');
             }
 
-            // Enable save button
             document.getElementById('saveJourneyBtn').disabled = false;
 
-            // Update net neutral info
-            updateNetNeutralInfo();
+             updateNetNeutralInfo();
         }
 
         function updateNetNeutralInfo() {
@@ -1234,20 +1248,20 @@
 
             const infoDiv = document.getElementById('netNeutralInfo');
             if (selectedTransport === 'car') {
-                infoDiv.innerHTML = '<span class="net-neutral-badge negative">⚠️ This journey produces CO₂</span>';
+                infoDiv.innerHTML = '<span class="net-neutral-badge negative">⚠️ Ta podróż wytwórzy CO₂</span>';
             } else {
-                infoDiv.innerHTML = '<span class="net-neutral-badge">✓ This journey saves CO₂</span>';
+                infoDiv.innerHTML = '<span class="net-neutral-badge">✓ Ta podróż oszczędzi CO₂</span>';
             }
         }
 
         async function saveJourney() {
             if (!currentUser) {
-                alert('Please login first');
+                alert('Zaloguj się najpierw');
                 return;
             }
 
             if (!selectedTransport) {
-                alert('Please select bike or car');
+                alert('Wybierz rower lub samochód');
                 return;
             }
 
@@ -1257,19 +1271,19 @@
             const endLon = parseFloat(document.getElementById('endLon').value);
 
             if (!startLat || !startLon || !endLat || !endLon) {
-                alert('Please enter all coordinates');
+                alert('Wprowadź wszystkie współrzędne');
                 return;
             }
 
             const saveBtn = document.getElementById('saveJourneyBtn');
-            saveBtn.disabled = true;
+             saveBtn.disabled = true;
 
-            const stationResult = document.getElementById('stationResult');
-            let stationData = {};
+             const stationResult = document.getElementById('stationResult');
+             let stacjaData = {};
             if (stationResult.style.display !== 'none') {
                 const stationName = stationResult.querySelector('.station-name');
                 if (stationName) {
-                    stationData = {
+                    stacjaData = {
                         nearest_station_name: stationName.textContent.replace('🚲 ', '').trim()
                     };
                 }
@@ -1285,10 +1299,10 @@
                         user_id: currentUser.id,
                         latitude: startLat,
                         longitude: startLon,
-                        destination_latitude: endLat,
-                        destination_longitude: endLon,
-                        chosen_transport: selectedTransport,
-                        ...stationData
+                         destination_latitude: endLat,
+                         destination_longitude: endLon,
+                         chosen_transport: selectedTransport,
+                         ...stacjaData
                     })
                 });
 
@@ -1300,21 +1314,19 @@
                     msg.classList.remove('error');
                     msg.classList.add('loading');
                     
-                    // Reload user stats
                     setTimeout(loadUserStats, 500);
-                    
-                    // Reset
-                    setTimeout(() => {
-                        selectedTransport = null;
-                        document.getElementById('bikeBtnChoice').classList.remove('selected');
-                        document.getElementById('carBtnChoice').classList.remove('selected');
-                        saveBtn.disabled = true;
-                    }, 1000);
+                     
+                     setTimeout(() => {
+                         selectedTransport = null;
+                         document.getElementById('bikeBtnChoice').classList.remove('selected');
+                         document.getElementById('carBtnChoice').classList.remove('selected');
+                         saveBtn.disabled = true;
+                     }, 1000);
                 } else {
-                    alert('❌ Failed to save journey: ' + (data.error || 'Unknown error'));
+                    alert('❌ Nie udało się zapisać podróży: ' + (data.error || 'Nieznany błąd'));
                 }
             } catch (error) {
-                alert('❌ Error: ' + error.message);
+                alert('❌ Błąd: ' + error.message);
             } finally {
                 saveBtn.disabled = false;
             }
@@ -1331,14 +1343,14 @@
                         const lon = position.coords.longitude.toFixed(4);
                         document.getElementById('startLat').value = lat;
                         document.getElementById('startLon').value = lon;
-                        document.getElementById('message').textContent = '✓ Location detected. Enter destination and calculate.';
+                        document.getElementById('message').textContent = '✓ Lokalizacja wykryta. Wpisz cel i oblicz.';
                     },
                     (error) => {
                         document.getElementById('startLat').value = '54.3520';
                         document.getElementById('startLon').value = '18.6466';
                         document.getElementById('endLat').value = '54.4000';
                         document.getElementById('endLon').value = '18.7000';
-                        document.getElementById('message').textContent = 'Using Gdansk coordinates. Enable location for your area.';
+                        document.getElementById('message').textContent = 'Użytkowanie współrzędnych Gdańska. Włącz lokalizację dla swojej okolicy.';
                     }
                 );
             } else {

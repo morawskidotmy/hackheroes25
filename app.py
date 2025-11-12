@@ -1,60 +1,50 @@
-"""
-CO2 Bike Calculator API - Flask Application
-Main API server for calculating CO2 savings when choosing bikes over cars
-Focused on MEVO - Polish bike sharing system
-"""
-
 import math
 import os
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import logging
-from providers import MEVOProvider
+from providers import Dostawa_MEVO
 from io import BytesIO
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
 try:
     from PIL import Image, ImageDraw, ImageFont
-    PIL_AVAILABLE = True
+    PIL_DOSTEPNY = True
 except ImportError:
-    PIL_AVAILABLE = False
+    PIL_DOSTEPNY = False
 
 try:
     import supabase
-    SUPABASE_URL = os.getenv('SUPABASE_URL')
-    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-    SUPABASE_AVAILABLE = SUPABASE_URL and SUPABASE_KEY
-    if SUPABASE_AVAILABLE:
-        supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+    ADRES_SUPABASE = os.getenv('ADRES_SUPABASE')
+    KLUCZ_SUPABASE = os.getenv('KLUCZ_SUPABASE')
+    SUPABASE_DOSTEPNY = ADRES_SUPABASE and KLUCZ_SUPABASE
+    if SUPABASE_DOSTEPNY:
+        klient_supabase = supabase.create_client(ADRES_SUPABASE, KLUCZ_SUPABASE)
     else:
-        supabase_client = None
+        klient_supabase = None
 except ImportError:
-    SUPABASE_AVAILABLE = False
-    supabase_client = None
+    SUPABASE_DOSTEPNY = False
+    klient_supabase = None
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Constants
-CO2_PER_KM_CAR = 0.12  # kg of CO2 per km for a car
-BIKE_SPEED_KPH = 15.0
-CAR_SPEED_KPH = 40.0
-DEFAULT_RADIUS = 2.0
+CO2_NA_KM_SAMOCHOD = 0.12
+PREDKOSC_ROWERU_KMH = 15.0
+PREDKOSC_SAMOCHODU_KMH = 40.0
+DOMYSLNY_PROMIEN = 2.0
 
-# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
-# Initialize provider
-provider = MEVOProvider()
+dostawca = Dostawa_MEVO()
 
 
-def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """
-    Calculate distance between two points using Haversine formula.
-    Returns distance in kilometers.
-    """
-    R = 6371.0  # Earth's radius in km
+def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
     
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
@@ -67,507 +57,515 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * c
 
 
-def calculate_co2_savings(distance_km: float) -> float:
-    """Calculate CO2 savings in kg based on distance."""
-    return distance_km * CO2_PER_KM_CAR
+def oblicz_oszczednosci_co2(dystans_km: float) -> float:
+    return dystans_km * CO2_NA_KM_SAMOCHOD
 
 
-def format_travel_time(hours: float) -> str:
-    """Convert hours to readable time format."""
-    minutes = int(hours * 60)
+def formatuj_czas_podrozy(godziny: float) -> str:
+    minuty = int(godziny * 60)
     
-    if minutes < 60:
-        return f"{minutes} minutes"
+    if minuty < 60:
+        return f"{minuty} minut"
     
-    hours_int = minutes // 60
-    remaining_minutes = minutes % 60
+    godziny_int = minuty // 60
+    pozostale_minuty = minuty % 60
     
-    if remaining_minutes == 0:
-        return f"{hours_int} hour" if hours_int == 1 else f"{hours_int} hours"
+    if pozostale_minuty == 0:
+        return f"{godziny_int} godzina" if godziny_int == 1 else f"{godziny_int} godzin"
     
-    hour_str = "1 hour" if hours_int == 1 else f"{hours_int} hours"
-    return f"{hour_str} {remaining_minutes} minutes"
+    godzina_tekst = "1 godzina" if godziny_int == 1 else f"{godziny_int} godzin"
+    return f"{godzina_tekst} {pozostale_minuty} minut"
 
 
-def validate_coordinates(lat: float, lon: float) -> tuple[bool, str]:
-    """Validate latitude and longitude bounds."""
+def waliduj_wspolrzedne(lat: float, lon: float) -> tuple[bool, str]:
     if lat < -90 or lat > 90:
-        return False, "Latitude must be between -90 and 90"
+        return False, "Szerokość geograficzna musi być między -90 a 90"
     if lon < -180 or lon > 180:
-        return False, "Longitude must be between -180 and 180"
+        return False, "Długość geograficzna musi być między -180 a 180"
     return True, ""
 
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint."""
     return jsonify({
         'status': 'OK',
-        'provider': provider.name()
+        'provider': dostawca.nazwa()
     }), 200
 
 
 @app.route('/v1/search-nearest-station', methods=['GET'])
-def search_nearest_station():
-    """
-    Search for nearest MEVO bike station.
-    
-    Query parameters:
-    - latitude: float (required)
-    - longitude: float (required)
-    - radius: float (optional, default 2.0)
-    """
+def szukaj_najblizszej_stacji():
     try:
         lat = request.args.get('latitude', type=float)
         lon = request.args.get('longitude', type=float)
-        radius = request.args.get('radius', 2.0, type=float)
+        promien = request.args.get('radius', 2.0, type=float)
         
         if lat is None or lon is None:
-            return jsonify({'error': 'Missing latitude or longitude'}), 400
+            return jsonify({'error': 'Brak szerokości lub długości geograficznej'}), 400
         
-        is_valid, error_msg = validate_coordinates(lat, lon)
-        if not is_valid:
-            return jsonify({'error': error_msg}), 400
+        jest_poprawne, komunikat_bledu = waliduj_wspolrzedne(lat, lon)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
         
-        vehicles = provider.get_vehicles(lat, lon, radius)
+        pojazdy = dostawca.pobierz_pojazdy(lat, lon, promien)
         
-        if not vehicles:
+        if not pojazdy:
             return jsonify({
                 'success': True,
                 'found': False,
-                'message': 'No stations found nearby'
+                'message': 'Brak stacji w pobliżu'
             }), 200
         
-        nearest = vehicles[0]
+        najblizszy = pojazdy[0]
         return jsonify({
             'success': True,
             'found': True,
             'station': {
-                'name': nearest.get('name', 'MEVO Station'),
-                'latitude': nearest.get('latitude'),
-                'longitude': nearest.get('longitude'),
-                'bikes_available': nearest.get('bikes_available'),
-                'distance_km': nearest.get('distance_km')
+                'name': najblizszy.get('name', 'Stacja MEVO'),
+                'latitude': najblizszy.get('latitude'),
+                'longitude': najblizszy.get('longitude'),
+                'bikes_available': najblizszy.get('bikes_available'),
+                'distance_km': najblizszy.get('distance_km')
             }
         }), 200
     
     except Exception as e:
-        logger.error(f"Error in search_nearest_station: {e}")
-        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+        logger.error(f"Błąd: {e}")
+        return jsonify({'error': 'Błąd wewnętrzny serwera', 'details': str(e)}), 500
 
 
 @app.route('/v1/calculate-co2-savings', methods=['POST'])
-def calculate_co2():
-    """
-    Main endpoint: Calculate CO2 savings for a bike trip.
-    
-    Request body:
-    {
-        "latitude": float (required),
-        "longitude": float (required),
-        "destination_latitude": float (required),
-        "destination_longitude": float (required),
-        "radius": float (optional, default 2.0),
-        "user_id": string (optional, for tracking)
-    }
-    """
+def oblicz_co2():
     try:
-        data = request.get_json()
+        dane = request.get_json()
         
-        # Validate required fields
-        required_fields = ['latitude', 'longitude', 'destination_latitude', 'destination_longitude']
-        if not all(field in data for field in required_fields):
+        wymagane_pola = ['latitude', 'longitude', 'destination_latitude', 'destination_longitude']
+        if not all(pole in dane for pole in wymagane_pola):
             return jsonify({
-                'error': 'Missing required fields',
-                'required': required_fields
+                'error': 'Brakujące wymagane pola',
+                'required': wymagane_pola
             }), 400
         
-        # Extract and validate coordinates
-        lat = float(data['latitude'])
-        lon = float(data['longitude'])
-        dest_lat = float(data['destination_latitude'])
-        dest_lon = float(data['destination_longitude'])
-        radius = float(data.get('radius', DEFAULT_RADIUS))
-        user_id = data.get('user_id')
+        lat = float(dane['latitude'])
+        lon = float(dane['longitude'])
+        dest_lat = float(dane['destination_latitude'])
+        dest_lon = float(dane['destination_longitude'])
+        promien = float(dane.get('radius', DOMYSLNY_PROMIEN))
+        uzytkownik_id = dane.get('user_id')
         
-        # Validate bounds
-        is_valid, error_msg = validate_coordinates(lat, lon)
-        if not is_valid:
-            return jsonify({'error': error_msg}), 400
+        jest_poprawne, komunikat_bledu = waliduj_wspolrzedne(lat, lon)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
         
-        is_valid, error_msg = validate_coordinates(dest_lat, dest_lon)
-        if not is_valid:
-            return jsonify({'error': error_msg}), 400
+        jest_poprawne, komunikat_bledu = waliduj_wspolrzedne(dest_lat, dest_lon)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
         
-        # Get vehicles from MEVO
-        vehicles = provider.get_vehicles(lat, lon, radius)
+        pojazdy = dostawca.pobierz_pojazdy(lat, lon, promien)
         
-        # Calculate distance
-        distance = calculate_distance(lat, lon, dest_lat, dest_lon)
+        dystans = oblicz_dystans(lat, lon, dest_lat, dest_lon)
         
-        # Calculate CO2 savings
-        co2_savings = calculate_co2_savings(distance)
+        oszczednosci_co2 = oblicz_oszczednosci_co2(dystans)
         
-        # Calculate travel times
-        bike_time = format_travel_time(distance / BIKE_SPEED_KPH)
-        car_time = format_travel_time(distance / CAR_SPEED_KPH)
+        czas_rower = formatuj_czas_podrozy(dystans / PREDKOSC_ROWERU_KMH)
+        czas_samochod = formatuj_czas_podrozy(dystans / PREDKOSC_SAMOCHODU_KMH)
         
-        # Select closest vehicle or return success without vehicle
-        closest_vehicle = vehicles[0] if vehicles else None
+        najblizszy_pojazd = pojazdy[0] if pojazdy else None
         
-        # Store in Supabase if user_id provided
-        calculation_id = None
-        if user_id and supabase_client:
+        id_obliczenia = None
+        if uzytkownik_id and klient_supabase:
             try:
-                result = supabase_client.table('co2_calculations').insert({
-                    'user_id': user_id,
-                    'co2_savings_kg': round(co2_savings, 3),
-                    'distance_km': round(distance, 2),
+                wynik = klient_supabase.table('co2_calculations').insert({
+                    'user_id': uzytkownik_id,
+                    'co2_savings_kg': round(oszczednosci_co2, 3),
+                    'distance_km': round(dystans, 2),
                     'start_lat': lat,
                     'start_lon': lon,
                     'end_lat': dest_lat,
                     'end_lon': dest_lon,
                     'created_at': datetime.utcnow().isoformat()
                 }).execute()
-                calculation_id = result.data[0]['id'] if result.data else None
+                id_obliczenia = wynik.data[0]['id'] if wynik.data else None
             except Exception as e:
-                logger.warning(f"Failed to store calculation: {e}")
+                logger.warning(f"Nie udało się zapisać obliczenia: {e}")
         
-        response = {
+        odpowiedz = {
             'success': True,
-            'id': calculation_id,
-            'distance_km': round(distance, 2),
-            'co2_savings_kg': round(co2_savings, 3),
+            'id': id_obliczenia,
+            'distance_km': round(dystans, 2),
+            'co2_savings_kg': round(oszczednosci_co2, 3),
             'travel_times': {
-                'bike_minutes': bike_time,
-                'car_minutes': car_time
+                'bike_minutes': czas_rower,
+                'car_minutes': czas_samochod
             },
             'environmental_impact': {
                 'co2_per_km_car_grams': 120,
-                'co2_saved_grams': int(co2_savings * 1000),
-                'equivalent_trees': round(co2_savings / 0.021, 2)
+                'co2_saved_grams': int(oszczednosci_co2 * 1000),
+                'equivalent_trees': round(oszczednosci_co2 / 0.021, 2)
             }
         }
         
-        if closest_vehicle:
-            response['closest_vehicle'] = closest_vehicle
-            response['message'] = f"By choosing a {closest_vehicle['type']} instead of a car for this {distance:.2f}km trip, you save approximately {co2_savings:.2f}kg of CO2 emissions!"
+        if najblizszy_pojazd:
+            odpowiedz['closest_vehicle'] = najblizszy_pojazd
+            odpowiedz['message'] = f"Wybierając {najblizszy_pojazd['type']} zamiast samochodu na trasę {dystans:.2f}km oszczędzasz około {oszczednosci_co2:.2f}kg CO₂!"
         else:
-            response['message'] = f"No bikes found in your area. For a {distance:.2f}km trip, you would save {co2_savings:.2f}kg of CO2 by choosing a bike instead of a car!"
+            odpowiedz['message'] = f"Brak rowerów w Twojej okolicy. Na trasę {dystans:.2f}km oszczędziłbyś {oszczednosci_co2:.2f}kg CO₂ wybierając rower zamiast samochodu!"
         
-        return jsonify(response), 200
+        return jsonify(odpowiedz), 200
     
     except ValueError as e:
-        return jsonify({'error': 'Invalid input data', 'details': str(e)}), 400
+        return jsonify({'error': 'Niepoprawne dane wejściowe', 'details': str(e)}), 400
     except Exception as e:
-        logger.error(f"Error in calculate_co2: {e}")
-        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+        logger.error(f"Błąd: {e}")
+        return jsonify({'error': 'Błąd wewnętrzny serwera', 'details': str(e)}), 500
 
 
 @app.route('/v1/nearby-stations', methods=['GET'])
-def nearby_stations():
-    """
-    Get nearby MEVO bike stations.
-    
-    Query parameters:
-    - latitude: float (required)
-    - longitude: float (required)
-    - radius: float (optional, default 1.0)
-    """
+def pobliskie_stacje():
     try:
-        # Extract query parameters
         lat = request.args.get('latitude', type=float)
         lon = request.args.get('longitude', type=float)
-        radius = request.args.get('radius', 1.0, type=float)
+        promien = request.args.get('radius', 1.0, type=float)
         
-        # Validate required parameters
         if lat is None or lon is None:
-            return jsonify({'error': 'Missing latitude or longitude'}), 400
+            return jsonify({'error': 'Brak szerokości lub długości geograficznej'}), 400
         
-        # Validate bounds
-        is_valid, error_msg = validate_coordinates(lat, lon)
-        if not is_valid:
-            return jsonify({'error': error_msg}), 400
+        jest_poprawne, komunikat_bledu = waliduj_wspolrzedne(lat, lon)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
         
-        # Get vehicles from MEVO
-        vehicles = provider.get_vehicles(lat, lon, radius)
+        pojazdy = dostawca.pobierz_pojazdy(lat, lon, promien)
         
         return jsonify({
             'success': True,
-            'count': len(vehicles),
-            'stations': vehicles
+            'count': len(pojazdy),
+            'stations': pojazdy
         }), 200
     
     except Exception as e:
-        logger.error(f"Error in nearby_stations: {e}")
-        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+        logger.error(f"Błąd: {e}")
+        return jsonify({'error': 'Błąd wewnętrzny serwera', 'details': str(e)}), 500
 
 
 @app.route('/v1/save-journey', methods=['POST'])
-def save_journey():
-    """
-    Save a journey with transport choice (bike or car).
-    
-    Request body:
-    {
-        "user_id": string (required),
-        "latitude": float (required),
-        "longitude": float (required),
-        "destination_latitude": float (required),
-        "destination_longitude": float (required),
-        "chosen_transport": string (required, 'bike' or 'car'),
-        "nearest_station_name": string (optional),
-        "nearest_station_lat": float (optional),
-        "nearest_station_lon": float (optional)
-    }
-    """
+def zapisz_podroze():
     try:
-        data = request.get_json()
+        dane = request.get_json()
         
-        required_fields = ['user_id', 'latitude', 'longitude', 'destination_latitude', 
+        wymagane_pola = ['user_id', 'latitude', 'longitude', 'destination_latitude', 
                           'destination_longitude', 'chosen_transport']
-        if not all(field in data for field in required_fields):
+        if not all(pole in dane for pole in wymagane_pola):
             return jsonify({
-                'error': 'Missing required fields',
-                'required': required_fields
+                'error': 'Brakujące wymagane pola',
+                'required': wymagane_pola
             }), 400
         
-        user_id = data['user_id']
-        lat = float(data['latitude'])
-        lon = float(data['longitude'])
-        dest_lat = float(data['destination_latitude'])
-        dest_lon = float(data['destination_longitude'])
-        chosen_transport = data['chosen_transport'].lower()
+        uzytkownik_id = dane['user_id']
+        lat = float(dane['latitude'])
+        lon = float(dane['longitude'])
+        dest_lat = float(dane['destination_latitude'])
+        dest_lon = float(dane['destination_longitude'])
+        wybrany_transport = dane['chosen_transport'].lower()
         
-        if chosen_transport not in ['bike', 'car']:
-            return jsonify({'error': 'chosen_transport must be "bike" or "car"'}), 400
+        if wybrany_transport not in ['bike', 'car']:
+            return jsonify({'error': 'chosen_transport musi być "bike" lub "car"'}), 400
         
-        # Calculate distance and potential savings
-        distance = calculate_distance(lat, lon, dest_lat, dest_lon)
-        potential_co2 = calculate_co2_savings(distance)
+        dystans = oblicz_dystans(lat, lon, dest_lat, dest_lon)
+        potencjalny_co2 = oblicz_oszczednosci_co2(dystans)
         
-        if not supabase_client:
-            return jsonify({'error': 'Database not available'}), 503
+        if not klient_supabase:
+            return jsonify({'error': 'Baza danych niedostępna'}), 503
         
-        # Save journey
-        journey_data = {
-            'user_id': user_id,
+        dane_podrozy = {
+            'user_id': uzytkownik_id,
             'start_lat': lat,
             'start_lon': lon,
             'end_lat': dest_lat,
             'end_lon': dest_lon,
-            'distance_km': round(distance, 2),
-            'chosen_transport': chosen_transport,
-            'potential_co2_savings_kg': round(potential_co2, 3),
-            'nearest_station_name': data.get('nearest_station_name'),
-            'nearest_station_lat': data.get('nearest_station_lat'),
-            'nearest_station_lon': data.get('nearest_station_lon')
+            'distance_km': round(dystans, 2),
+            'chosen_transport': wybrany_transport,
+            'potential_co2_savings_kg': round(potencjalny_co2, 3),
+            'nearest_station_name': dane.get('nearest_station_name'),
+            'nearest_station_lat': dane.get('nearest_station_lat'),
+            'nearest_station_lon': dane.get('nearest_station_lon')
         }
         
-        result = supabase_client.table('journey_tracking').insert(journey_data).execute()
+        wynik = klient_supabase.table('journey_tracking').insert(dane_podrozy).execute()
         
-        # Update user stats
-        update_user_stats(user_id, chosen_transport, potential_co2)
+        aktualizuj_statystyki_uzytkownika(uzytkownik_id, wybrany_transport, potencjalny_co2)
         
         return jsonify({
             'success': True,
-            'journey_id': result.data[0]['id'] if result.data else None,
-            'message': f"Journey saved: {chosen_transport.upper()} ({distance:.2f}km)"
+            'journey_id': wynik.data[0]['id'] if wynik.data else None,
+            'message': f"Podróż zapisana: {wybrany_transport.upper()} ({dystans:.2f}km)"
         }), 200
     
     except Exception as e:
-        logger.error(f"Error in save_journey: {e}")
-        return jsonify({'error': 'Failed to save journey', 'details': str(e)}), 500
+        logger.error(f"Błąd: {e}")
+        return jsonify({'error': 'Nie udało się zapisać podróży', 'details': str(e)}), 500
 
 
-def update_user_stats(user_id: str, transport: str, co2_saved: float):
-    """Update user stats in the user_stats table."""
+def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_oszczedzony: float):
     try:
-        if not supabase_client:
+        if not klient_supabase:
             return
         
-        # Get current stats
-        result = supabase_client.table('user_stats').select('*').eq('user_id', user_id).execute()
+        wynik = klient_supabase.table('user_stats').select('*').eq('user_id', uzytkownik_id).execute()
         
-        if result.data:
-            # Update existing
-            current = result.data[0]
-            new_co2 = current['total_co2_saved_kg'] + (co2_saved if transport == 'bike' else 0)
-            new_bike_count = current['total_bike_journeys'] + (1 if transport == 'bike' else 0)
-            new_car_count = current['total_car_journeys'] + (1 if transport == 'car' else 0)
+        if wynik.data:
+            obecny = wynik.data[0]
+            nowy_co2 = obecny['total_co2_saved_kg'] + (co2_oszczedzony if transport == 'bike' else 0)
+            nowa_liczba_rowerow = obecny['total_bike_journeys'] + (1 if transport == 'bike' else 0)
+            nowa_liczba_samochodow = obecny['total_car_journeys'] + (1 if transport == 'car' else 0)
             
-            # Determine if net neutral (more CO2 saved than from car journeys)
-            estimated_car_co2 = new_car_count * CO2_PER_KM_CAR * 10  # Assume ~10km average
-            net_neutral = new_co2 >= estimated_car_co2
+            szacowany_co2_samochod = nowa_liczba_samochodow * CO2_NA_KM_SAMOCHOD * 10
+            neutralny_net = nowy_co2 >= szacowany_co2_samochod
             
-            supabase_client.table('user_stats').update({
-                'total_co2_saved_kg': round(new_co2, 3),
-                'total_bike_journeys': new_bike_count,
-                'total_car_journeys': new_car_count,
-                'net_neutral': net_neutral,
+            klient_supabase.table('user_stats').update({
+                'total_co2_saved_kg': round(nowy_co2, 3),
+                'total_bike_journeys': nowa_liczba_rowerow,
+                'total_car_journeys': nowa_liczba_samochodow,
+                'net_neutral': neutralny_net,
                 'last_updated': datetime.utcnow().isoformat()
-            }).eq('user_id', user_id).execute()
+            }).eq('user_id', uzytkownik_id).execute()
         else:
-            # Create new
-            net_neutral = transport == 'bike'
-            supabase_client.table('user_stats').insert({
-                'user_id': user_id,
-                'total_co2_saved_kg': round(co2_saved if transport == 'bike' else 0, 3),
+            neutralny_net = transport == 'bike'
+            klient_supabase.table('user_stats').insert({
+                'user_id': uzytkownik_id,
+                'total_co2_saved_kg': round(co2_oszczedzony if transport == 'bike' else 0, 3),
                 'total_bike_journeys': 1 if transport == 'bike' else 0,
                 'total_car_journeys': 1 if transport == 'car' else 0,
-                'net_neutral': net_neutral,
+                'net_neutral': neutralny_net,
                 'last_updated': datetime.utcnow().isoformat()
             }).execute()
     except Exception as e:
-        logger.warning(f"Failed to update user stats: {e}")
+        logger.warning(f"Nie udało się zaktualizować statystyk użytkownika: {e}")
 
 
 @app.route('/v1/user-stats/<user_id>', methods=['GET'])
-def get_user_stats(user_id):
-    """Get total CO2 savings and net neutrality status for a user."""
+def pobierz_statystyki_uzytkownika(user_id):
     try:
-        if not supabase_client:
-            return jsonify({'error': 'Stats not available'}), 503
+        if not klient_supabase:
+            return jsonify({'error': 'Statystyki niedostępne'}), 503
         
-        # Get user stats
-        stats_result = supabase_client.table('user_stats').select(
+        wynik_statystyk = klient_supabase.table('user_stats').select(
             '*'
         ).eq('user_id', user_id).execute()
         
-        if stats_result.data:
-            user_stat = stats_result.data[0]
-            total_co2 = user_stat['total_co2_saved_kg']
-            bike_journeys = user_stat['total_bike_journeys']
-            car_journeys = user_stat['total_car_journeys']
-            net_neutral = user_stat['net_neutral']
+        if wynik_statystyk.data:
+            stat_uzytkownika = wynik_statystyk.data[0]
+            laczsny_co2 = stat_uzytkownika['total_co2_saved_kg']
+            podroze_rowerem = stat_uzytkownika['total_bike_journeys']
+            podroze_samochodem = stat_uzytkownika['total_car_journeys']
+            neutralny_net = stat_uzytkownika['net_neutral']
         else:
-            total_co2 = 0
-            bike_journeys = 0
-            car_journeys = 0
-            net_neutral = False
+            laczsny_co2 = 0
+            podroze_rowerem = 0
+            podroze_samochodem = 0
+            neutralny_net = False
         
-        # Also get from co2_calculations for backwards compatibility
-        calc_result = supabase_client.table('co2_calculations').select(
+        wynik_obliczen = klient_supabase.table('co2_calculations').select(
             'co2_savings_kg'
         ).eq('user_id', user_id).execute()
         
-        legacy_co2 = sum(item['co2_savings_kg'] for item in calc_result.data) if calc_result.data else 0
-        legacy_count = len(calc_result.data) if calc_result.data else 0
+        stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
+        liczba_starych = len(wynik_obliczen.data) if wynik_obliczen.data else 0
         
         return jsonify({
             'success': True,
             'user_id': user_id,
-            'total_co2_kg': round(total_co2 + legacy_co2, 2),
-            'total_co2_grams': int((total_co2 + legacy_co2) * 1000),
-            'bike_journeys': bike_journeys,
-            'car_journeys': car_journeys,
-            'net_neutral': net_neutral,
-            'trips_count': legacy_count + bike_journeys + car_journeys,
-            'equivalent_trees': round((total_co2 + legacy_co2) / 0.021, 2)
+            'total_co2_kg': round(laczsny_co2 + stary_co2, 2),
+            'total_co2_grams': int((laczsny_co2 + stary_co2) * 1000),
+            'bike_journeys': podroze_rowerem,
+            'car_journeys': podroze_samochodem,
+            'net_neutral': neutralny_net,
+            'trips_count': liczba_starych + podroze_rowerem + podroze_samochodem,
+            'equivalent_trees': round((laczsny_co2 + stary_co2) / 0.021, 2)
         }), 200
     
     except Exception as e:
-        logger.error(f"Error getting user stats: {e}")
-        return jsonify({'error': 'Failed to get stats', 'details': str(e)}), 500
+        logger.error(f"Błąd przy pobieraniu statystyk: {e}")
+        return jsonify({'error': 'Nie udało się pobrać statystyk', 'details': str(e)}), 500
 
 
 @app.route('/v1/share-graphic/<user_id>', methods=['GET'])
-def generate_share_graphic(user_id):
-    """Generate a shareable graphic of CO2 savings."""
+def wygeneruj_grafike_dzielenia(user_id):
     try:
-        if not PIL_AVAILABLE:
-            return jsonify({'error': 'Image generation not available'}), 503
+        if not PIL_DOSTEPNY:
+            return jsonify({'error': 'Generowanie obrazów niedostępne'}), 503
         
-        if not supabase_client:
-            return jsonify({'error': 'Stats not available'}), 503
+        if not klient_supabase:
+            return jsonify({'error': 'Statystyki niedostępne'}), 503
         
-        # Get user stats
-        result = supabase_client.table('co2_calculations').select(
+        wynik = klient_supabase.table('co2_calculations').select(
             'co2_savings_kg'
         ).eq('user_id', user_id).execute()
         
-        total_co2 = sum(item['co2_savings_kg'] for item in result.data) if result.data else 0
-        count = len(result.data) if result.data else 0
+        laczsny_co2 = sum(item['co2_savings_kg'] for item in wynik.data) if wynik.data else 0
+        liczba = len(wynik.data) if wynik.data else 0
         
-        # Create image
-        width, height = 1200, 630
-        image = Image.new('RGB', (width, height), color='#000000')
-        draw = ImageDraw.Draw(image)
+        szerokosc, wysokosc = 1200, 630
+        obraz = Image.new('RGB', (szerokosc, wysokosc), color='#000000')
+        rysowanie = ImageDraw.Draw(obraz)
         
         try:
-            # Try to use nice fonts, fall back to default
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-            value_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
-            label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
+            czcionka_tytul = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+            czcionka_wartosc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+            czcionka_etykieta = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
         except:
-            title_font = ImageFont.load_default()
-            value_font = ImageFont.load_default()
-            label_font = ImageFont.load_default()
+            czcionka_tytul = ImageFont.load_default()
+            czcionka_wartosc = ImageFont.load_default()
+            czcionka_etykieta = ImageFont.load_default()
         
-        # Draw background gradient effect (black to dark gray)
-        for y in range(height):
-            shade = int(20 * (y / height))
-            color = (shade, shade, shade)
-            draw.rectangle([(0, y), (width, y+1)], fill=color)
+        for y in range(wysokosc):
+            odcien = int(20 * (y / wysokosc))
+            kolor = (odcien, odcien, odcien)
+            rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
         
-        # Draw green accent bar
-        draw.rectangle([(0, 0), (width, 8)], fill='#00ff00')
+        rysowanie.rectangle([(0, 0), (szerokosc, 8)], fill='#00ff00')
         
-        # Draw main text
-        co2_text = f"{total_co2:.2f}"
-        draw.text((width//2, 200), co2_text, fill='#00ff00', font=value_font, anchor="mm")
+        tekst_co2 = f"{laczsny_co2:.2f}"
+        rysowanie.text((szerokosc//2, 200), tekst_co2, fill='#00ff00', font=czcionka_wartosc, anchor="mm")
         
-        # Draw label
-        draw.text((width//2, 380), "KG CO₂ SAVED", fill='#ffffff', font=label_font, anchor="mm")
+        rysowanie.text((szerokosc//2, 380), "KG CO₂ SAVED", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
-        # Draw trips count
-        trips_text = f"{count} trips"
-        draw.text((width//2, 480), trips_text, fill='#888888', font=label_font, anchor="mm")
+        tekst_podrozy = f"{liczba} trips"
+        rysowanie.text((szerokosc//2, 480), tekst_podrozy, fill='#888888', font=czcionka_etykieta, anchor="mm")
         
-        # Draw branding
-        draw.text((width//2, height-50), "co2.bike", fill='#666666', font=label_font, anchor="mm")
+        rysowanie.text((szerokosc//2, wysokosc-50), "zielony-pedal.pl", fill='#666666', font=czcionka_etykieta, anchor="mm")
         
-        # Save to bytes
         img_io = BytesIO()
-        image.save(img_io, 'PNG', quality=95)
+        obraz.save(img_io, 'PNG', quality=95)
         img_io.seek(0)
         
         return send_file(img_io, mimetype='image/png', as_attachment=False)
     
     except Exception as e:
-        logger.error(f"Error generating graphic: {e}")
-        return jsonify({'error': 'Failed to generate graphic', 'details': str(e)}), 500
+        logger.error(f"Błąd przy generowaniu grafiki: {e}")
+        return jsonify({'error': 'Nie udało się wygenerować grafiki', 'details': str(e)}), 500
+
+
+@app.route('/v1/share-graphic-stats/<user_id>', methods=['GET'])
+def wygeneruj_grafike_statystyk(user_id):
+    try:
+        if not PIL_DOSTEPNY:
+            return jsonify({'error': 'Generowanie obrazów niedostępne'}), 503
+        
+        if not klient_supabase:
+            return jsonify({'error': 'Statystyki niedostępne'}), 503
+        
+        wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
+        
+        laczsny_co2_oszczedzony = 0
+        podroze_rowerem = 0
+        podroze_samochodem = 0
+        
+        if wynik_statystyk.data:
+            stat_uzytkownika = wynik_statystyk.data[0]
+            laczsny_co2_oszczedzony = stat_uzytkownika['total_co2_saved_kg']
+            podroze_rowerem = stat_uzytkownika['total_bike_journeys']
+            podroze_samochodem = stat_uzytkownika['total_car_journeys']
+        
+        wynik_obliczen = klient_supabase.table('co2_calculations').select('co2_savings_kg').eq('user_id', user_id).execute()
+        stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
+        
+        laczsny_co2_oszczedzony += stary_co2
+        
+        szacowany_co2_samochod = podroze_samochodem * 10 * CO2_NA_KM_SAMOCHOD
+        
+        saldo_netto = laczsny_co2_oszczedzony - szacowany_co2_samochod
+        jest_pozytywne = saldo_netto >= 0
+        
+        szerokosc, wysokosc = 1200, 630
+        obraz = Image.new('RGB', (szerokosc, wysokosc), color='#000000')
+        rysowanie = ImageDraw.Draw(obraz)
+        
+        try:
+            czcionka_tytul = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
+            czcionka_wartosc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
+            czcionka_etykieta = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
+            czcionka_mala = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+        except:
+            czcionka_tytul = ImageFont.load_default()
+            czcionka_wartosc = ImageFont.load_default()
+            czcionka_etykieta = ImageFont.load_default()
+            czcionka_mala = ImageFont.load_default()
+        
+        for y in range(wysokosc):
+            odcien = int(30 * (y / wysokosc))
+            kolor = (odcien, odcien, odcien)
+            rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+        
+        kolor_akcentu = '#00ff00' if jest_pozytywne else '#ff6b6b'
+        rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill=kolor_akcentu)
+        
+        tytul = "Mój wpływ na klimat"
+        rysowanie.text((szerokosc//2, 80), tytul, fill=kolor_akcentu, font=czcionka_tytul, anchor="mm")
+        
+        tekst_netto = f"{abs(saldo_netto):.1f}"
+        rysowanie.text((szerokosc//2, 250), tekst_netto, fill=kolor_akcentu, font=czcionka_wartosc, anchor="mm")
+        
+        tekst_jednostka = "kg CO₂ ZAOSZCZĘDZONO" if jest_pozytywne else "kg CO₂ EMISJI"
+        rysowanie.text((szerokosc//2, 360), tekst_jednostka, fill='#ffffff', font=czcionka_etykieta, anchor="mm")
+        
+        y_statystyk = 450
+        tekst_statystyk = f"🚴 {podroze_rowerem} podróży | 🚗 {podroze_samochodem} podróży | 📊 Oszczędzono: {laczsny_co2_oszczedzony:.1f} kg"
+        rysowanie.text((szerokosc//2, y_statystyk), tekst_statystyk, fill='#888888', font=czcionka_mala, anchor="mm")
+        
+        if jest_pozytywne:
+            tekst_statusu = "✓ NET POZYTYWNIE"
+            kolor_statusu = '#00ff00'
+        else:
+            tekst_statusu = "⚠ NET NEGATYWNIE"
+            kolor_statusu = '#ff6b6b'
+        
+        rysowanie.text((szerokosc//2, wysokosc-60), tekst_statusu, fill=kolor_statusu, font=czcionka_etykieta, anchor="mm")
+        
+        img_io = BytesIO()
+        obraz.save(img_io, 'PNG', quality=95)
+        img_io.seek(0)
+        
+        return send_file(img_io, mimetype='image/png', as_attachment=False)
+    
+    except Exception as e:
+        logger.error(f"Błąd przy generowaniu grafiki statystyk: {e}")
+        return jsonify({'error': 'Nie udało się wygenerować grafiki', 'details': str(e)}), 500
 
 
 @app.route('/', methods=['GET'])
 def index():
-    """Serve index page."""
     try:
         with open('index.html', 'r') as f:
-            return f.read(), 200, {'Content-Type': 'text/html'}
+            zawartosc = f.read()
+        
+        adres_supabase = os.getenv('ADRES_SUPABASE', 'YOUR_SUPABASE_URL')
+        klucz_supabase = os.getenv('KLUCZ_SUPABASE', 'YOUR_SUPABASE_ANON_KEY')
+        
+        zawartosc = zawartosc.replace('YOUR_SUPABASE_URL', adres_supabase)
+        zawartosc = zawartosc.replace('YOUR_SUPABASE_ANON_KEY', klucz_supabase)
+        
+        return zawartosc, 200, {'Content-Type': 'text/html'}
     except FileNotFoundError:
-        return jsonify({'error': 'Index file not found'}), 404
+        return jsonify({'error': 'Plik nie znaleziony'}), 404
 
 
 @app.errorhandler(404)
-def not_found(e):
-    """Handle 404 errors."""
-    return jsonify({'error': 'Endpoint not found'}), 404
+def nie_znaleziono(e):
+    return jsonify({'error': 'Endpoint nie znaleziony'}), 404
 
 
 @app.errorhandler(500)
-def internal_error(e):
-    """Handle 500 errors."""
-    return jsonify({'error': 'Internal server error'}), 500
+def blad_wewnętrzny(e):
+    return jsonify({'error': 'Błąd wewnętrzny serwera'}), 500
 
 
 if __name__ == '__main__':
     import os
     port = int(os.getenv('PORT', 8080))
-    debug = os.getenv('DEBUG', 'False') == 'True'
+    debugowanie = os.getenv('DEBUGOWANIE', 'False') == 'True'
     
-    logger.info(f"Starting CO2 Bike Calculator API on port {port}")
-    logger.info(f"Provider: {provider.name()}")
-    logger.info(f"Web interface: http://localhost:{port}")
+    logger.info(f"Uruchamianie Zielonego Pedału na porcie {port}")
+    logger.info(f"Dostawca: {dostawca.nazwa()}")
+    logger.info(f"Interfejs: http://localhost:{port}")
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='0.0.0.0', port=port, debug=debugowanie)
