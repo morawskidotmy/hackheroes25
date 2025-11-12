@@ -94,8 +94,12 @@
             border-color: #4285f4;
         }
 
-        .github-btn {
-            border-color: #ffffff;
+        .discord-btn {
+            border-color: #5865f2;
+        }
+
+        .email-btn {
+            border-color: #00ff00;
         }
 
         .user-header {
@@ -690,13 +694,20 @@
     <div class="auth-modal" id="authModal">
         <div class="auth-box">
             <h2>Login</h2>
-            <div class="auth-buttons">
-                <button class="auth-btn google-btn" onclick="loginWithGoogle()">
-                    🔵 Google
+            <div class="auth-buttons" id="authButtons">
+                <button class="auth-btn discord-btn" onclick="loginWithDiscord()">
+                    🎮 Discord
                 </button>
-                <button class="auth-btn github-btn" onclick="loginWithGithub()">
-                    ⚫ GitHub
+                <button class="auth-btn email-btn" onclick="showEmailAuth()">
+                    📧 Email
                 </button>
+            </div>
+            <div id="emailAuthForm" style="display: none; margin-top: 20px;">
+                <input type="email" id="emailInput" placeholder="your@email.com" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
+                <input type="password" id="passwordInput" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
+                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Sign Up</button>
+                <button onclick="loginEmail()" style="width: 100%; padding: 10px; background: #555; color: #fff; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Login</button>
+                <button onclick="hideEmailAuth()" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 6px; cursor: pointer;">Back</button>
             </div>
         </div>
     </div>
@@ -816,14 +827,27 @@
             }
         }
 
-        async function loginWithGoogle() {
+        function showEmailAuth() {
+            document.getElementById('authButtons').style.display = 'none';
+            document.getElementById('emailAuthForm').style.display = 'block';
+            document.getElementById('emailInput').focus();
+        }
+
+        function hideEmailAuth() {
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('emailAuthForm').style.display = 'none';
+            document.getElementById('emailInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        }
+
+        async function loginWithDiscord() {
             if (!supabase) {
                 alert('Supabase not configured');
                 return;
             }
 
             const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+                provider: 'discord',
                 options: {
                     redirectTo: window.location.origin
                 }
@@ -832,20 +856,57 @@
             if (error) alert('Login error: ' + error.message);
         }
 
-        async function loginWithGithub() {
+        async function signUpEmail() {
             if (!supabase) {
                 alert('Supabase not configured');
                 return;
             }
 
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'github',
-                options: {
-                    redirectTo: window.location.origin
-                }
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            const { error } = await supabase.auth.signUp({
+                email,
+                password
             });
-            
-            if (error) alert('Login error: ' + error.message);
+
+            if (error) {
+                alert('Sign up error: ' + error.message);
+            } else {
+                alert('Sign up successful! Check your email for confirmation.');
+                hideEmailAuth();
+            }
+        }
+
+        async function loginEmail() {
+            if (!supabase) {
+                alert('Supabase not configured');
+                return;
+            }
+
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                alert('Login error: ' + error.message);
+            } else {
+                hideEmailAuth();
+            }
         }
 
         async function logout() {
