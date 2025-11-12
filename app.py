@@ -532,17 +532,19 @@ def wygeneruj_grafike_statystyk(user_id):
         return jsonify({'error': 'Nie udało się wygenerować grafiki', 'details': str(e)}), 500
 
 
+@app.route('/config', methods=['GET'])
+def pobierz_config():
+    return jsonify({
+        'adres_supabase': os.getenv('ADRES_SUPABASE'),
+        'klucz_supabase': os.getenv('KLUCZ_SUPABASE')
+    }), 200
+
+
 @app.route('/', methods=['GET'])
 def index():
     try:
         with open('index.html', 'r') as f:
             zawartosc = f.read()
-        
-        adres_supabase = os.getenv('ADRES_SUPABASE', 'YOUR_SUPABASE_URL')
-        klucz_supabase = os.getenv('KLUCZ_SUPABASE', 'YOUR_SUPABASE_ANON_KEY')
-        
-        zawartosc = zawartosc.replace('YOUR_SUPABASE_URL', adres_supabase)
-        zawartosc = zawartosc.replace('YOUR_SUPABASE_ANON_KEY', klucz_supabase)
         
         return zawartosc, 200, {'Content-Type': 'text/html'}
     except FileNotFoundError:

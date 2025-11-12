@@ -800,8 +800,8 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        let SUPABASE_URL = null;
+        let SUPABASE_ANON_KEY = null;
         
         let supabase = null;
         let currentUser = null;
@@ -809,12 +809,24 @@
         let selectedTransport = null;
         let currentCalculation = null;
 
-        function initSupabase() {
-            if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-                console.log('Supabase nie skonfigurowany. Autentykacja wyłączona.');
-                return;
+        async function initSupabase() {
+            try {
+                const response = await fetch('/config');
+                const config = await response.json();
+                
+                SUPABASE_URL = config.adres_supabase;
+                SUPABASE_ANON_KEY = config.klucz_supabase;
+                
+                if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+                    console.log('Supabase nie skonfigurowany. Autentykacja wyłączona.');
+                    return;
+                }
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await checkAuth();
+            } catch (error) {
+                console.error('Błąd wczytywania konfiguracji:', error);
             }
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
         async function checkAuth() {
@@ -1332,9 +1344,8 @@
             }
         }
 
-        window.addEventListener('load', () => {
-            initSupabase();
-            checkAuth();
+        window.addEventListener('load', async () => {
+            await initSupabase();
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
