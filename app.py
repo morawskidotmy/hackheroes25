@@ -411,7 +411,7 @@ def wygeneruj_grafike_dzielenia(user_id):
             czcionka_tytul = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
             czcionka_wartosc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
             czcionka_etykieta = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
-        except:
+        except Exception:
             czcionka_tytul = ImageFont.load_default()
             czcionka_wartosc = ImageFont.load_default()
             czcionka_etykieta = ImageFont.load_default()
@@ -481,7 +481,7 @@ def wygeneruj_grafike_statystyk(user_id):
             czcionka_wartosc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
             czcionka_etykieta = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
             czcionka_mala = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
-        except:
+        except Exception:
             czcionka_tytul = ImageFont.load_default()
             czcionka_wartosc = ImageFont.load_default()
             czcionka_etykieta = ImageFont.load_default()
