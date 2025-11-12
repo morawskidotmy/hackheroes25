@@ -5,7 +5,7 @@ from flask_cors import CORS
 import logging
 from providers import Dostawa_MEVO
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -170,6 +170,13 @@ def oblicz_co2():
         czas_rower = formatuj_czas_podrozy(dystans / PREDKOSC_ROWERU_KMH)
         czas_samochod = formatuj_czas_podrozy(dystans / PREDKOSC_SAMOCHODU_KMH)
         
+        czas_rower_minuty = int((dystans / PREDKOSC_ROWERU_KMH) * 60)
+        czas_samochod_minuty = int((dystans / PREDKOSC_SAMOCHODU_KMH) * 60)
+        
+        teraz = datetime.now()
+        przyjazd_rowerem = (teraz + timedelta(minutes=czas_rower_minuty)).strftime("%H:%M")
+        przyjazd_samochodem = (teraz + timedelta(minutes=czas_samochod_minuty)).strftime("%H:%M")
+        
         najblizszy_pojazd = pojazdy[0] if pojazdy else None
         
         id_obliczenia = None
@@ -196,7 +203,9 @@ def oblicz_co2():
             'co2_savings_kg': round(oszczednosci_co2, 3),
             'travel_times': {
                 'bike_minutes': czas_rower,
-                'car_minutes': czas_samochod
+                'car_minutes': czas_samochod,
+                'bike_arrival': przyjazd_rowerem,
+                'car_arrival': przyjazd_samochodem
             },
             'environmental_impact': {
                 'co2_per_km_car_grams': 120,
@@ -287,7 +296,8 @@ def zapisz_podroze():
             'potential_co2_savings_kg': round(potencjalny_co2, 3),
             'nearest_station_name': dane.get('nearest_station_name'),
             'nearest_station_lat': dane.get('nearest_station_lat'),
-            'nearest_station_lon': dane.get('nearest_station_lon')
+            'nearest_station_lon': dane.get('nearest_station_lon'),
+            'bike_type': dane.get('bike_type')
         }
         
         wynik = klient_supabase.table('journey_tracking').insert(dane_podrozy).execute()
@@ -427,12 +437,12 @@ def wygeneruj_grafike_dzielenia(user_id):
         tekst_co2 = f"{laczsny_co2:.2f}"
         rysowanie.text((szerokosc//2, 200), tekst_co2, fill='#00ff00', font=czcionka_wartosc, anchor="mm")
         
-        rysowanie.text((szerokosc//2, 380), "KG CO₂ SAVED", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, 380), "KG CO₂ OSZCZĘDZONO", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
-        tekst_podrozy = f"{liczba} trips"
+        tekst_podrozy = f"{liczba} podróży"
         rysowanie.text((szerokosc//2, 480), tekst_podrozy, fill='#888888', font=czcionka_etykieta, anchor="mm")
         
-        rysowanie.text((szerokosc//2, wysokosc-50), "zielony-pedal.pl", fill='#666666', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, wysokosc-50), "sqrtco.pl", fill='#666666', font=czcionka_etykieta, anchor="mm")
         
         img_io = BytesIO()
         obraz.save(img_io, 'PNG', quality=95)

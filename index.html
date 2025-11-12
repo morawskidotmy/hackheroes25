@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zielony Pedał - Śledzenie wpływu na klimat</title>
+    <title>sqrt(CO) - Śledzenie wpływu na klimat</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -240,13 +240,21 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border-radius: 8px;
+            opacity: 0.5;
+            pointer-events: none;
         }
 
-        button:hover {
+        button:not(:disabled) {
+            opacity: 1;
+            pointer-events: auto;
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        button:hover:not(:disabled) {
             background: #cccccc;
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: scale(0.98);
         }
 
@@ -494,6 +502,51 @@
             display: block;
         }
 
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .container {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .bento-grid {
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        button:not(:disabled) {
+            animation: none;
+        }
+
+        button:not(:disabled):hover {
+            animation: none;
+        }
+
         .transport-choice-section {
             display: none;
             margin-top: 30px;
@@ -503,8 +556,63 @@
             border-radius: 8px;
         }
 
+        .bike-type-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #222;
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+        }
+
+        .bike-type-section.visible {
+            display: block;
+            animation: slideInUp 0.4s ease-out;
+        }
+
+        .bike-type-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .bike-type-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .bike-type-btn {
+            padding: 12px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bike-type-btn:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .bike-type-btn.selected {
+            background: #00ff00;
+            color: #000;
+            border-color: #00ff00;
+        }
+
         .transport-choice-section.visible {
             display: block;
+            animation: slideInUp 0.5s ease-out;
         }
 
         .transport-choice-label {
@@ -698,8 +806,8 @@
 </head>
 <body>
     <div class="auth-modal" id="authModal">
-        <div class="auth-box">
-            <h2>Zaloguj się</h2>
+         <div class="auth-box">
+             <h2>Zaloguj się do sqrt(CO)</h2>
             <div class="auth-buttons" id="authButtons">
                 <button class="auth-btn discord-btn" onclick="loginWithDiscord()">
                     🎮 Discord
@@ -711,7 +819,7 @@
             <div id="emailAuthForm" style="display: none; margin-top: 20px;">
                 <input type="email" id="emailInput" placeholder="twoj@email.com" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
                 <input type="password" id="passwordInput" placeholder="Hasło" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
-                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Stwórz konto</button>
+                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Utwórz konto</button>
                 <button onclick="loginEmail()" style="width: 100%; padding: 10px; background: #555; color: #fff; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Zaloguj się</button>
                 <button onclick="hideEmailAuth()" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 6px; cursor: pointer;">Wróć</button>
             </div>
@@ -729,10 +837,10 @@
 
     <div class="container">
          <div class="header">
-             <h1>🚴 ZIELONY PEDAŁ</h1>
-             <p>Śledzenie wpływu na klimat</p>
-             <div class="tagline">Każda podróż rowerem ratuje planetę</div>
-         </div>
+              <h1>√(CO)</h1>
+              <p>Śledzenie wpływu na klimat</p>
+              <div class="tagline">Każda podróż rowerem ratuje planetę</div>
+          </div>
 
         <div class="input-section">
             <div class="input-group">
@@ -754,22 +862,31 @@
         </div>
 
         <div class="button-group">
-            <button id="calcBtn" onclick="calculate()">Oblicz</button>
-            <button class="location-btn" onclick="getLocation()">📍 Moja lokalizacja</button>
-            <button class="location-btn" onclick="searchNearestStation()">🔍 Wyszukaj stację</button>
+            <button id="calcBtn" onclick="calculate()" disabled>Oblicz</button>
+            <button class="location-btn" id="locationBtn" onclick="getLocation()" disabled>📍 Moja lokalizacja</button>
+            <button class="location-btn" id="stationBtn" onclick="searchNearestStation()" disabled>🔍 Wyszukaj stację</button>
         </div>
 
         <div id="stationResult" class="station-result" style="display: none;"></div>
 
         <div class="transport-choice-section" id="transportSection">
-            <label class="transport-choice-label">Wybierz środek transportu:</label>
-            <div class="transport-buttons">
-                <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Rower</button>
-                <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Samochód</button>
-            </div>
-            <div id="netNeutralInfo"></div>
-            <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Zapisz podróż</button>
-        </div>
+             <label class="transport-choice-label">Wybierz środek transportu:</label>
+             <div class="transport-buttons">
+                 <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Rower</button>
+                 <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Samochód</button>
+             </div>
+
+             <div class="bike-type-section" id="bikeTypeSection">
+                 <label class="bike-type-label">Jaki rower?</label>
+                 <div class="bike-type-buttons">
+                     <button class="bike-type-btn" id="ownBikeBtn" onclick="selectBikeType('own')">🏠 Mój rower</button>
+                     <button class="bike-type-btn" id="mevoBikeBtn" onclick="selectBikeType('mevo')">🅿️ Rower MEVO</button>
+                 </div>
+             </div>
+
+             <div id="netNeutralInfo"></div>
+             <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Zapisz podróż</button>
+         </div>
 
         <div class="probe-section">
             <div class="probe-label">
@@ -804,10 +921,11 @@
         let SUPABASE_ANON_KEY = null;
         
         let supabase = null;
-        let currentUser = null;
-        let maxCO2 = 5;
-        let selectedTransport = null;
-        let currentCalculation = null;
+         let currentUser = null;
+         let maxCO2 = 5;
+         let selectedTransport = null;
+         let selectedBikeType = null;
+         let currentCalculation = null;
 
         async function initSupabase() {
             try {
@@ -1143,12 +1261,14 @@
                 <div class="bento-box-wide">
                     <div style="display: flex; gap: 40px;">
                         <div>
-                            <div class="bento-value">${travelTime.bike_minutes}</div>
-                            <div class="bento-label">Rowerem</div>
+                            <div class="bento-value" style="font-size: 28px;">${travelTime.bike_arrival}</div>
+                            <div class="bento-label">Przyjazd rowerem</div>
+                            <div style="font-size: 11px; color: #666; margin-top: 5px;">${travelTime.bike_minutes}</div>
                         </div>
                         <div>
-                            <div class="bento-value">${travelTime.car_minutes}</div>
-                            <div class="bento-label">Samochodem</div>
+                            <div class="bento-value" style="font-size: 28px;">${travelTime.car_arrival}</div>
+                            <div class="bento-label">Przyjazd samochodem</div>
+                            <div style="font-size: 11px; color: #666; margin-top: 5px;">${travelTime.car_minutes}</div>
                         </div>
                     </div>
                 </div>
@@ -1238,22 +1358,40 @@
         }
 
         function selectTransport(transport) {
-            selectedTransport = transport;
-            
-            // Update button states
-            document.getElementById('bikeBtnChoice').classList.remove('selected');
-            document.getElementById('carBtnChoice').classList.remove('selected');
-            
-            if (transport === 'bike') {
-                document.getElementById('bikeBtnChoice').classList.add('selected');
-            } else {
-                document.getElementById('carBtnChoice').classList.add('selected');
-            }
-
-            document.getElementById('saveJourneyBtn').disabled = false;
+             selectedTransport = transport;
+             selectedBikeType = null;
+             
+             document.getElementById('bikeBtnChoice').classList.remove('selected');
+             document.getElementById('carBtnChoice').classList.remove('selected');
+             
+             if (transport === 'bike') {
+                 document.getElementById('bikeBtnChoice').classList.add('selected');
+                 document.getElementById('bikeTypeSection').classList.add('visible');
+                 document.getElementById('saveJourneyBtn').disabled = true;
+             } else {
+                 document.getElementById('carBtnChoice').classList.add('selected');
+                 document.getElementById('bikeTypeSection').classList.remove('visible');
+                 document.getElementById('saveJourneyBtn').disabled = false;
+             }
 
              updateNetNeutralInfo();
-        }
+         }
+
+         function selectBikeType(bikeType) {
+              selectedBikeType = bikeType;
+              
+              document.getElementById('ownBikeBtn').classList.remove('selected');
+              document.getElementById('mevoBikeBtn').classList.remove('selected');
+              
+              if (bikeType === 'own') {
+                  document.getElementById('ownBikeBtn').classList.add('selected');
+              } else {
+                  document.getElementById('mevoBikeBtn').classList.add('selected');
+              }
+
+              document.getElementById('saveJourneyBtn').disabled = false;
+              updateNetNeutralInfo();
+          }
 
         function updateNetNeutralInfo() {
             if (!currentUser || !selectedTransport) return;
@@ -1302,21 +1440,27 @@
             }
 
             try {
-                const response = await fetch('/v1/save-journey', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUser.id,
-                        latitude: startLat,
-                        longitude: startLon,
-                         destination_latitude: endLat,
-                         destination_longitude: endLon,
-                         chosen_transport: selectedTransport,
-                         ...stacjaData
-                    })
-                });
+                 const payload = {
+                     user_id: currentUser.id,
+                     latitude: startLat,
+                     longitude: startLon,
+                      destination_latitude: endLat,
+                      destination_longitude: endLon,
+                      chosen_transport: selectedTransport,
+                      ...stacjaData
+                 };
+                 
+                 if (selectedTransport === 'bike' && selectedBikeType) {
+                     payload.bike_type = selectedBikeType;
+                 }
+                 
+                 const response = await fetch('/v1/save-journey', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                     body: JSON.stringify(payload)
+                 });
 
                 const data = await response.json();
 
@@ -1346,6 +1490,10 @@
 
         window.addEventListener('load', async () => {
             await initSupabase();
+
+            document.getElementById('calcBtn').disabled = false;
+            document.getElementById('locationBtn').disabled = false;
+            document.getElementById('stationBtn').disabled = false;
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
