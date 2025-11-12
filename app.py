@@ -236,10 +236,11 @@ def internal_error(e):
 
 if __name__ == '__main__':
     import os
-    port = int(os.getenv('PORT', 3000))
+    port = int(os.getenv('PORT', 8080))
     debug = os.getenv('DEBUG', 'False') == 'True'
     
     logger.info(f"Starting CO2 Bike Calculator API on port {port}")
     logger.info(f"Provider: {provider.name()}")
+    logger.info(f"Web interface: http://localhost:{port}")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
