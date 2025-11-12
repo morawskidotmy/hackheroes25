@@ -100,4 +100,3 @@ Generuj efektowne grafiki PNG (1200x630 px):
 ### Z autoryzacją
 - `POST /v1/save-journey` - zapisz podróż
 - `GET /v1/user-stats/{user_id}` - Twoje statystyki
-- `
