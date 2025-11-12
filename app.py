@@ -7,26 +7,18 @@ from providers import Dostawa_MEVO
 from io import BytesIO
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import supabase
+from PIL import Image, ImageDraw, ImageFont
 
 load_dotenv()
 
-try:
-    from PIL import Image, ImageDraw, ImageFont
-    PIL_DOSTEPNY = True
-except ImportError:
-    PIL_DOSTEPNY = False
+ADRES_SUPABASE = os.getenv('ADRES_SUPABASE')
+KLUCZ_SUPABASE = os.getenv('KLUCZ_SUPABASE')
+SUPABASE_DOSTEPNY = ADRES_SUPABASE and KLUCZ_SUPABASE
 
-try:
-    import supabase
-    ADRES_SUPABASE = os.getenv('ADRES_SUPABASE')
-    KLUCZ_SUPABASE = os.getenv('KLUCZ_SUPABASE')
-    SUPABASE_DOSTEPNY = ADRES_SUPABASE and KLUCZ_SUPABASE
-    if SUPABASE_DOSTEPNY:
-        klient_supabase = supabase.create_client(ADRES_SUPABASE, KLUCZ_SUPABASE)
-    else:
-        klient_supabase = None
-except ImportError:
-    SUPABASE_DOSTEPNY = False
+if SUPABASE_DOSTEPNY:
+    klient_supabase = supabase.create_client(ADRES_SUPABASE, KLUCZ_SUPABASE)
+else:
     klient_supabase = None
 
 logging.basicConfig(level=logging.INFO)
@@ -401,9 +393,6 @@ def pobierz_statystyki_uzytkownika(user_id):
 @app.route('/v1/share-graphic/<user_id>', methods=['GET'])
 def wygeneruj_grafike_dzielenia(user_id):
     try:
-        if not PIL_DOSTEPNY:
-            return jsonify({'error': 'Generowanie obrazów niedostępne'}), 503
-        
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
@@ -458,9 +447,6 @@ def wygeneruj_grafike_dzielenia(user_id):
 @app.route('/v1/share-graphic-stats/<user_id>', methods=['GET'])
 def wygeneruj_grafike_statystyk(user_id):
     try:
-        if not PIL_DOSTEPNY:
-            return jsonify({'error': 'Generowanie obrazów niedostępne'}), 503
-        
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
