@@ -139,11 +139,34 @@
         }
 
         .logout-btn:hover {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
+             border-color: #ff6b6b;
+             color: #ff6b6b;
+         }
+
+        @media (max-width: 768px) {
+            .user-header {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                top: auto;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                padding: 12px 15px;
+                border-radius: 12px;
+                z-index: 500;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
         }
 
-        .container {
+         .container {
             width: 100%;
             max-width: 900px;
             display: flex;
