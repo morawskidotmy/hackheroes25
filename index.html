@@ -811,6 +811,7 @@
                     supabase.auth.onAuthStateChange((event, session) => {
                         if (session) {
                             currentUser = session.user;
+                            document.getElementById('authModal').classList.add('hidden');
                             updateUserUI();
                         } else {
                             currentUser = null;
@@ -822,6 +823,7 @@
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session) {
                         currentUser = session.user;
+                        document.getElementById('authModal').classList.add('hidden');
                         updateUserUI();
                     }
                 }
