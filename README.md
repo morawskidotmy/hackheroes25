@@ -19,7 +19,7 @@ sqrt(CO) to innowacyjna aplikacja, która pozwala na śledzenie wpływu Twoich d
 - 🌍 **Przeglądać globalne wyniki społeczności** - ile CO₂ zaoszczędziła nasza społeczność
 - 🌳 **Widzieć równoważnik w uratowanych drzewach** dla każdej podróży
 - 🎨 **Generować grafiki** do udostępniania w serwisach społecznościowych
-- 👥 **Logować się** przez Google, Discord lub email
+- 👥 **Logować się** przez Discord lub email
 - 💾 **Zapisywać podróże** z metadanymi (typ roweru, stacja)
 - 📍 **Automatyczne dane lokalizacyjne** z geolokalizacji
 - 🔄 **Synchronizacja danych** z chmurą Supabase
