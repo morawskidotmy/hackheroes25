@@ -1367,18 +1367,13 @@
                         document.getElementById('message').textContent = '✓ Lokalizacja wykryta. Wpisz cel i oblicz.';
                     },
                     (error) => {
-                        document.getElementById('startLat').value = '54.3520';
-                        document.getElementById('startLon').value = '18.6466';
-                        document.getElementById('endLat').value = '54.4000';
-                        document.getElementById('endLon').value = '18.7000';
-                        document.getElementById('message').textContent = 'Użytkowanie współrzędnych Gdańska. Włącz lokalizację dla swojej okolicy.';
+                        document.getElementById('message').textContent = '❌ Błąd lokalizacji: ' + error.message + '. Wpisz współrzędne ręcznie.';
+                        document.getElementById('message').classList.add('error');
                     }
                 );
             } else {
-                document.getElementById('startLat').value = '54.3520';
-                document.getElementById('startLon').value = '18.6466';
-                document.getElementById('endLat').value = '54.4000';
-                document.getElementById('endLon').value = '18.7000';
+                document.getElementById('message').textContent = '❌ Geolokalizacja nie jest wspierana. Wpisz współrzędne ręcznie.';
+                document.getElementById('message').classList.add('error');
             }
         });
     </script>

@@ -511,7 +511,7 @@ def wygeneruj_grafike_statystyk(user_id):
         rysowanie.text((szerokosc//2, 360), tekst_jednostka, fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
         y_statystyk = 450
-        tekst_statystyk = f"🚴 {podroze_rowerem} podróży | 🚗 {podroze_samochodem} podróży | 📊 Oszczędzono: {laczsny_co2_oszczedzony:.1f} kg"
+        tekst_statystyk = f"Podróże rowerem: {podroze_rowerem} | Samochodem: {podroze_samochodem} | Oszczędzono: {laczsny_co2_oszczedzony:.1f} kg"
         rysowanie.text((szerokosc//2, y_statystyk), tekst_statystyk, fill='#888888', font=czcionka_mala, anchor="mm")
         
         if jest_pozytywne:
