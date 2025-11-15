@@ -77,6 +77,7 @@ class Dostawa_MEVO:
                     'is_available': True
                 })
             
+            pojazdy.sort(key=lambda x: x['distance_km'])
             return pojazdy
         
         except Exception as e:

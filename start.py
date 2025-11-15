@@ -34,7 +34,7 @@ def zapisz_log(msg):
 
 def czysc_log():
     with open(PLIK_LOGU, 'w') as f:
-        f.write(f"Kalkulator CO2 Rowerów - Log Testowy\n")
+        f.write(f"sqrtco - Kalkulator CO2 Rowerów - Log Testowy\n")
         f.write(f"Rozpoczęto: {datetime.now()}\n")
         f.write("=" * 80 + "\n\n")
 
@@ -133,17 +133,23 @@ def testuj_api():
           -d '{"latitude": 54.3520, "longitude": 18.6466, "destination_latitude": 54.4000, "destination_longitude": 18.7000}' ''',
         "Obliczenie CO2 (trasa Gdańsk)"
     )
+    
+    drukuj_status("Testowanie endpointu /v1/global-stats...")
+    uruchom_cmd(
+        'curl -s http://localhost:3000/v1/global-stats',
+        "Globalne statystyki"
+    )
 
 def main():
     czysc_log()
     
-    drukuj_status("Uruchamianie Kalkulatora CO2 Rowerów...")
-    zapisz_log("Uruchamianie Kalkulatora CO2 Rowerów...\n")
+    drukuj_status("Uruchamianie sqrtco - Kalkulatora CO2 Rowerów...")
+    zapisz_log("Uruchamianie sqrtco - Kalkulatora CO2 Rowerów...\n")
     print()
     
     drukuj_status("Instalowanie zależności...")
     zapisz_log("Instalowanie zależności...")
-    if not uruchom_cmd("pip install -q flask flask-cors requests 2>&1", "Instalacja zależności"):
+    if not uruchom_cmd("pip install -q flask flask-cors requests supabase pillow python-dotenv gunicorn 2>&1", "Instalacja zależności"):
         drukuj_ostrzezenie("Niektóre zależności mogą nie być zainstalowane, kontynuowanie...")
         zapisz_log("OSTRZEŻENIE: Niektóre zależności mogą nie być zainstalowane")
     print()

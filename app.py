@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import supabase
 from PIL import Image, ImageDraw, ImageFont
+import json
 
 load_dotenv()
 
@@ -33,8 +34,6 @@ app = Flask(__name__)
 CORS(app)
 
 dostawca = Dostawa_MEVO()
-
-
 
 def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
@@ -533,6 +532,40 @@ def wygeneruj_grafike_statystyk(user_id):
     except Exception as e:
         logger.error(f"Błąd przy generowaniu grafiki statystyk: {e}")
         return jsonify({'error': 'Nie udało się wygenerować grafiki', 'details': str(e)}), 500
+
+
+@app.route('/v1/global-stats', methods=['GET'])
+def pobierz_globalne_statystyki():
+    try:
+        if not klient_supabase:
+            return jsonify({'error': 'Statystyki niedostępne'}), 503
+        
+        wynik_uzytkownikow = klient_supabase.table('user_stats').select('total_co2_saved_kg,total_co2_emitted_kg,total_bike_journeys,total_car_journeys').execute()
+        
+        suma_co2_oszczedzono = 0
+        suma_co2_emitowano = 0
+        suma_podrozy_rowerem = 0
+        suma_podrozy_samochodem = 0
+        
+        for user in wynik_uzytkownikow.data:
+            suma_co2_oszczedzono += user.get('total_co2_saved_kg', 0)
+            suma_co2_emitowano += user.get('total_co2_emitted_kg', 0)
+            suma_podrozy_rowerem += user.get('total_bike_journeys', 0)
+            suma_podrozy_samochodem += user.get('total_car_journeys', 0)
+        
+        return jsonify({
+            'success': True,
+            'global_co2_saved_kg': round(suma_co2_oszczedzono, 2),
+            'global_co2_emitted_kg': round(suma_co2_emitowano, 2),
+            'global_bike_journeys': suma_podrozy_rowerem,
+            'global_car_journeys': suma_podrozy_samochodem,
+            'total_users': len(wynik_uzytkownikow.data) if wynik_uzytkownikow.data else 0,
+            'equivalent_trees': round(suma_co2_oszczedzono / 0.021, 2)
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Błąd przy pobieraniu globalnych statystyk: {e}")
+        return jsonify({'error': 'Nie udało się pobrać statystyk', 'details': str(e)}), 500
 
 
 @app.route('/config', methods=['GET'])

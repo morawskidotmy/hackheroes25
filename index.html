@@ -86,21 +86,9 @@
             background: #222;
         }
 
-        .auth-btn:active {
-            transform: scale(0.98);
-        }
-
-        .google-btn {
-            border-color: #4285f4;
-        }
-
-        .discord-btn {
-            border-color: #5865f2;
-        }
-
-        .email-btn {
-            border-color: #00ff00;
-        }
+        .google-btn { border-color: #4285f4; }
+        .discord-btn { border-color: #5865f2; }
+        .email-btn { border-color: #00ff00; }
 
         .user-header {
             position: absolute;
@@ -401,10 +389,6 @@
             color: #ffffff;
         }
 
-        .location-btn:active {
-            transform: scale(0.98);
-        }
-
         .share-section {
             display: none;
             margin-top: 40px;
@@ -457,17 +441,6 @@
             color: #00ff00;
         }
 
-        .copy-link {
-            padding: 10px 20px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #888;
-            border-radius: 8px;
-            font-size: 12px;
-            word-break: break-all;
-            margin-top: 10px;
-        }
-
         .station-result {
             background: #1a1a1a;
             border: 1px solid #333;
@@ -498,146 +471,37 @@
             line-height: 1.6;
         }
 
-        .station-details span {
-            display: block;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
-        }
-
-        .container {
-            animation: slideInUp 0.6s ease-out;
-        }
-
-        .bento-grid {
-            animation: fadeIn 0.8s ease-out 0.3s both;
-        }
-
-        button:not(:disabled) {
-            animation: none;
-        }
-
-        button:not(:disabled):hover {
-            animation: none;
-        }
-
-        .transport-choice-section {
+        .transport-section {
             display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
         }
 
-        .bike-type-section {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: #222;
-            border: 1px solid #00ff00;
-            border-radius: 8px;
-        }
-
-        .bike-type-section.visible {
-            display: block;
-            animation: slideInUp 0.4s ease-out;
-        }
-
-        .bike-type-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            margin-bottom: 10px;
+        .transport-section.visible {
             display: block;
         }
 
-        .bike-type-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .bike-type-btn {
-            padding: 12px;
-            background: #1a1a1a;
-            border: 2px solid #333;
-            color: #888;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .bike-type-btn:hover {
-            border-color: #00ff00;
-            color: #00ff00;
-        }
-
-        .bike-type-btn.selected {
-            background: #00ff00;
-            color: #000;
-            border-color: #00ff00;
-        }
-
-        .transport-choice-section.visible {
-            display: block;
-            animation: slideInUp 0.5s ease-out;
-        }
-
-        .transport-choice-label {
+        .transport-label {
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: #888;
             margin-bottom: 15px;
-            display: block;
+            text-align: left;
         }
 
         .transport-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .transport-btn {
-            padding: 16px;
-            background: #222;
+            flex: 1;
+            padding: 20px;
+            background: #1a1a1a;
             border: 2px solid #333;
             color: #888;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -646,402 +510,394 @@
         }
 
         .transport-btn:hover {
-            border-color: #888;
-            color: #fff;
-        }
-
-        .transport-btn.bike {
-            border-color: #00ff00;
-            color: #00ff00;
-        }
-
-        .transport-btn.car {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
+            border-color: #ffffff;
+            color: #ffffff;
         }
 
         .transport-btn.selected {
+            border-color: #00ff00;
+            color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .bike-type-section {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .bike-type-section.visible {
+            display: block;
+        }
+
+        .bike-option {
+            padding: 15px;
             background: #1a1a1a;
-            font-weight: 700;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .bike-option:hover {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .bike-option.selected {
+            border-color: #00ff00;
+            color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .net-neutral-info {
+            padding: 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
         }
 
         .net-neutral-badge {
             display: inline-block;
-            padding: 6px 12px;
-            background: #00ff00;
-            color: #000;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
+            padding: 8px 16px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            border-radius: 20px;
+            color: #00ff00;
+            font-weight: 600;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
+            letter-spacing: 0.5px;
         }
 
         .net-neutral-badge.negative {
-            background: #ff6b6b;
-            color: #fff;
+            background: rgba(255, 107, 107, 0.2);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
         }
 
-        .save-journey-btn {
-            width: 100%;
-            padding: 14px;
-            background: #00ff00;
-            color: #000;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
+        .global-stats {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .global-stats-title {
+            font-size: 16px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .global-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .global-stat-item {
+            padding: 15px;
+            background: #000;
+            border: 1px solid #333;
             border-radius: 8px;
-            margin-top: 15px;
         }
 
-        .save-journey-btn:hover {
-            background: #00dd00;
+        .global-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ff00;
+            margin-bottom: 5px;
         }
 
-        .save-journey-btn:disabled {
-            background: #555;
-            color: #999;
-            cursor: not-allowed;
+        .global-stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        @media (max-width: 800px) {
-            .header h1 {
-                font-size: 36px;
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
             .input-section {
                 grid-template-columns: 1fr;
             }
-
             .bento-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
             .bento-box-large {
-                grid-column: span 2;
-                grid-row: span 1;
-                min-height: 200px;
-            }
-
-            .bento-box-wide {
-                grid-column: span 2;
-            }
-
-            .bento-value.large {
-                font-size: 42px;
-            }
-        }
-
-        @media (max-width: 500px) {
-            .header h1 {
-                font-size: 28px;
-            }
-
-            .header p {
-                font-size: 12px;
-            }
-
-            .container {
-                gap: 25px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .bento-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .bento-box {
-                min-height: 120px;
-                padding: 20px;
-            }
-
-            .bento-box-large,
-            .bento-box-wide {
                 grid-column: span 1;
                 grid-row: span 1;
-                min-height: 140px;
             }
-
-            .bento-value {
-                font-size: 28px;
-            }
-
-            .bento-value.large {
-                font-size: 36px;
-            }
-
-            .input-group label {
-                font-size: 11px;
-            }
-
-            .input-group input {
-                padding: 10px;
-                font-size: 13px;
-            }
-
-            button {
-                padding: 12px;
-                font-size: 13px;
-            }
-
-            .user-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .user-info {
-                text-align: center;
+            .bento-box-wide {
+                grid-column: span 2;
             }
         }
     </style>
 </head>
 <body>
-    <div class="auth-modal" id="authModal">
-         <div class="auth-box">
-             <h2>Zaloguj się do sqrt(CO)</h2>
-            <div class="auth-buttons" id="authButtons">
-                <button class="auth-btn discord-btn" onclick="loginWithDiscord()">
-                    🎮 Discord
-                </button>
-                <button class="auth-btn email-btn" onclick="showEmailAuth()">
-                    📧 Email
-                </button>
+    <div id="authModal" class="auth-modal">
+        <div class="auth-box">
+            <h2>Zaloguj się</h2>
+            <div class="auth-buttons">
+                <button class="auth-btn google-btn" onclick="signInWithGoogle()">🔐 Google</button>
+                <button class="auth-btn discord-btn" onclick="signInWithDiscord()">💜 Discord</button>
+                <button class="auth-btn email-btn" onclick="showEmailAuth()">✉️ Email</button>
             </div>
-            <div id="emailAuthForm" style="display: none; margin-top: 20px;">
-                <input type="email" id="emailInput" placeholder="twoj@email.com" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
-                <input type="password" id="passwordInput" placeholder="Hasło" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px;">
-                <button onclick="signUpEmail()" style="width: 100%; padding: 10px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Utwórz konto</button>
-                <button onclick="loginEmail()" style="width: 100%; padding: 10px; background: #555; color: #fff; border: none; border-radius: 6px; font-weight: 600; margin-bottom: 8px; cursor: pointer;">Zaloguj się</button>
-                <button onclick="hideEmailAuth()" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 6px; cursor: pointer;">Wróć</button>
+            <div id="emailAuthSection" style="display:none; margin-top: 20px;">
+                <input type="email" id="emailInput" placeholder="twój email" style="width:100%; padding:10px; margin-bottom:10px; background:#0a0a0a; border:1px solid #333; color:#fff; border-radius:6px;">
+                <input type="password" id="passwordInput" placeholder="hasło" style="width:100%; padding:10px; margin-bottom:10px; background:#0a0a0a; border:1px solid #333; color:#fff; border-radius:6px;">
+                <button class="auth-btn email-btn" onclick="signUpWithEmail()" style="width:100%; display:block;">Rejestracja</button>
+                <button class="auth-btn email-btn" onclick="signInWithEmail()" style="width:100%; display:block; margin-top:10px;">Logowanie</button>
             </div>
         </div>
     </div>
 
-    <div class="user-header" id="userHeader" style="display: none;">
+    <div id="userHeader" style="display: none;" class="user-header">
         <div class="user-info">
-            <div id="userName" style="font-size: 14px; font-weight: 500;"></div>
-            <div class="user-name" id="userEmail"></div>
+            <div class="user-name" id="userName">User</div>
+            <div class="user-name" id="userEmail">user@example.com</div>
         </div>
         <div class="user-avatar" id="userAvatar"></div>
         <button class="logout-btn" onclick="logout()">Wyloguj</button>
     </div>
 
     <div class="container">
-         <div class="header">
-              <h1>√(CO)</h1>
-              <p>Śledzenie wpływu na klimat</p>
-              <div class="tagline">Każda podróż rowerem ratuje planetę</div>
-          </div>
+        <div class="header">
+            <h1>sqrtco</h1>
+            <p>Śledzenie wpływu na klimat</p>
+            <p class="tagline">Każda podróż rowerem liczy się dla planety</p>
+        </div>
+
+        <div class="probe-section">
+            <div class="probe-label">
+                <span>CO₂ oszczędzony na trasie</span>
+                <span id="probeValue">0 kg</span>
+            </div>
+            <div class="probe-container">
+                <div class="probe-bar" id="probeBar">
+                    <span class="probe-text" id="probeBarText">0 kg</span>
+                </div>
+            </div>
+        </div>
 
         <div class="input-section">
             <div class="input-group">
-                <label>Szerokość geograficzna (start)</label>
+                <label>Punkt startu - szerokość</label>
                 <input type="number" id="startLat" placeholder="54.3520" step="0.0001">
             </div>
             <div class="input-group">
-                <label>Długość geograficzna (start)</label>
+                <label>Punkt startu - długość</label>
                 <input type="number" id="startLon" placeholder="18.6466" step="0.0001">
             </div>
             <div class="input-group">
-                <label>Szerokość geograficzna (koniec)</label>
+                <label>Cel - szerokość</label>
                 <input type="number" id="endLat" placeholder="54.4000" step="0.0001">
             </div>
             <div class="input-group">
-                <label>Długość geograficzna (koniec)</label>
+                <label>Cel - długość</label>
                 <input type="number" id="endLon" placeholder="18.7000" step="0.0001">
             </div>
         </div>
 
         <div class="button-group">
-            <button id="calcBtn" onclick="calculate()" disabled>Oblicz</button>
-            <button class="location-btn" id="locationBtn" onclick="getLocation()" disabled>📍 Moja lokalizacja</button>
-            <button class="location-btn" id="stationBtn" onclick="searchNearestStation()" disabled>🔍 Wyszukaj stację</button>
+            <button id="locationBtn" class="location-btn" onclick="getLocation()" disabled>📍 Moja lokalizacja</button>
+            <button id="stationBtn" class="location-btn" onclick="searchNearestStation()" disabled>🚲 Szukaj stacji</button>
+            <button id="calcBtn" disabled>⚡ Oblicz</button>
         </div>
 
-        <div id="stationResult" class="station-result" style="display: none;"></div>
+        <button onclick="calculate()" style="display:none;" id="calcBtnActual"></button>
+        <script>
+            document.getElementById('calcBtn').addEventListener('click', calculate);
+        </script>
 
-        <div class="transport-choice-section" id="transportSection">
-             <label class="transport-choice-label">Wybierz środek transportu:</label>
-             <div class="transport-buttons">
-                 <button class="transport-btn bike" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Rower</button>
-                 <button class="transport-btn car" id="carBtnChoice" onclick="selectTransport('car')">🚗 Samochód</button>
-             </div>
+        <div id="stationResult"></div>
 
-             <div class="bike-type-section" id="bikeTypeSection">
-                 <label class="bike-type-label">Jaki rower?</label>
-                 <div class="bike-type-buttons">
-                     <button class="bike-type-btn" id="ownBikeBtn" onclick="selectBikeType('own')">🏠 Mój rower</button>
-                     <button class="bike-type-btn" id="mevoBikeBtn" onclick="selectBikeType('mevo')">🅿️ Rower MEVO</button>
-                 </div>
-             </div>
+        <div id="message" class="message">
+            Wpisz współrzędne lub użyj przycisku "Moja lokalizacja"
+        </div>
 
-             <div id="netNeutralInfo"></div>
-             <button class="save-journey-btn" id="saveJourneyBtn" onclick="saveJourney()" disabled>Zapisz podróż</button>
-         </div>
+        <div id="stats"></div>
 
-        <div class="probe-section">
-            <div class="probe-label">
-                <span>CO₂ OSZCZĘDZONY (kg)</span>
-                <span id="probeValue">0 kg</span>
+        <div id="transportSection" class="transport-section">
+            <div class="transport-label">Jaki transport wybrałeś?</div>
+            <div class="transport-buttons">
+                <button class="transport-btn" id="bikeBtnChoice" onclick="selectTransport('bike')">🚴 Rower</button>
+                <button class="transport-btn" id="carBtnChoice" onclick="selectTransport('car')">🚗 Samochód</button>
             </div>
-            <div class="probe-container">
-                <div class="probe-bar" id="probeBar">
-                    <span class="probe-text" id="probeBarText"></span>
+
+            <div id="bikeTypeSection" class="bike-type-section">
+                <div class="transport-label">Jaki rower użyłeś?</div>
+                <div class="bike-option" id="ownBikeBtn" onclick="selectBikeType('own')">🏠 Mój rower</div>
+                <div class="bike-option" id="mevoBikeBtn" onclick="selectBikeType('mevo')">🚲 MEVO (bike-sharing)</div>
+            </div>
+
+            <div id="netNeutralInfo" class="net-neutral-info"></div>
+
+            <button id="saveJourneyBtn" disabled>💾 Zapisz podróż</button>
+            <script>
+                document.getElementById('saveJourneyBtn').addEventListener('click', saveJourney);
+            </script>
+        </div>
+
+        <div id="shareSection" class="share-section">
+            <div class="share-title" id="shareTitle">Twoje oszczędności CO₂</div>
+            <img id="shareGraphic" class="share-graphic" src="" alt="Grafika oszczędności">
+            <div class="share-buttons">
+                <button class="share-btn" onclick="shareGraphic()">🔗 Udostępnij</button>
+                <button class="share-btn" onclick="shareStatsGraphic()">📊 Pobierz raport</button>
+                <button class="share-btn" onclick="copyShareLink()">📋 Kopiuj link</button>
+            </div>
+            <div id="shareLink" class="copy-link" style="display:none;"></div>
+        </div>
+
+        <div id="globalStats" class="global-stats" style="display:none;">
+            <div class="global-stats-title">Globalne wyniki społeczności</div>
+            <div class="global-stats-grid">
+                <div class="global-stat-item">
+                    <div class="global-stat-value" id="globalCO2">0</div>
+                    <div class="global-stat-label">kg CO₂ Oszczędzono</div>
+                </div>
+                <div class="global-stat-item">
+                    <div class="global-stat-value" id="globalBikes">0</div>
+                    <div class="global-stat-label">Podróży rowerem</div>
+                </div>
+                <div class="global-stat-item">
+                    <div class="global-stat-value" id="globalTrees">0</div>
+                    <div class="global-stat-label">Uratowanych drzew</div>
+                </div>
+                <div class="global-stat-item">
+                    <div class="global-stat-value" id="globalUsers">0</div>
+                    <div class="global-stat-label">Aktywnych użytkowników</div>
                 </div>
             </div>
         </div>
-
-        <div class="bento-grid" id="stats"></div>
-         
-          <div class="share-section" id="shareSection">
-             <div class="share-title">Twój wpływ</div>
-             <img class="share-graphic" id="shareGraphic" src="" alt="Oszczędności CO2">
-             <div class="share-buttons">
-                 <button class="share-btn" onclick="copyShareLink()">📋 Skopiuj link</button>
-                 <button class="share-btn" onclick="shareGraphic()">📤 Udostępnij</button>
-                 <button class="share-btn" onclick="shareStatsGraphic()">🌍 Net Balance</button>
-             </div>
-             <div class="copy-link" id="shareLink" style="display: none;"></div>
-         </div>
-        
-        <div class="message" id="message">Wprowadź współrzędne początkowe i końcowe</div>
     </div>
 
     <script>
-        let SUPABASE_URL = null;
-        let SUPABASE_ANON_KEY = null;
-        
         let supabase = null;
-         let currentUser = null;
-         let maxCO2 = 5;
-         let selectedTransport = null;
-         let selectedBikeType = null;
-         let currentCalculation = null;
+        let currentUser = null;
+        let currentCalculation = null;
+        let selectedTransport = null;
+        let selectedBikeType = null;
+        let maxCO2 = 5;
 
         async function initSupabase() {
             try {
                 const response = await fetch('/config');
                 const config = await response.json();
                 
-                SUPABASE_URL = config.adres_supabase;
-                SUPABASE_ANON_KEY = config.klucz_supabase;
-                
-                if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-                    console.log('Supabase nie skonfigurowany. Autentykacja wyłączona.');
-                    return;
+                if (config.adres_supabase && config.klucz_supabase) {
+                    supabase = window.supabase.createClient(config.adres_supabase, config.klucz_supabase);
+                    
+                    supabase.auth.onAuthStateChange((event, session) => {
+                        if (session) {
+                            currentUser = session.user;
+                            updateUserUI();
+                        } else {
+                            currentUser = null;
+                            document.getElementById('userHeader').style.display = 'none';
+                            document.getElementById('authModal').classList.remove('hidden');
+                        }
+                    });
+                    
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        updateUserUI();
+                    }
                 }
-                
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                await checkAuth();
             } catch (error) {
-                console.error('Błąd wczytywania konfiguracji:', error);
+                console.error('Błąd inicjalizacji Supabase:', error);
             }
         }
 
-        async function checkAuth() {
+        async function signInWithGoogle() {
             if (!supabase) return;
-            
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-                currentUser = session.user;
-                updateUserUI();
-                document.getElementById('authModal').classList.add('hidden');
-            } else {
-                document.getElementById('authModal').classList.remove('hidden');
-            }
+            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+            if (error) alert('Błąd logowania Google: ' + error.message);
+        }
+
+        async function signInWithDiscord() {
+            if (!supabase) return;
+            const { error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });
+            if (error) alert('Błąd logowania Discord: ' + error.message);
         }
 
         function showEmailAuth() {
-            document.getElementById('authButtons').style.display = 'none';
-            document.getElementById('emailAuthForm').style.display = 'block';
-            document.getElementById('emailInput').focus();
+            document.getElementById('emailAuthSection').style.display = 'block';
         }
 
         function hideEmailAuth() {
-            document.getElementById('authButtons').style.display = 'flex';
-            document.getElementById('emailAuthForm').style.display = 'none';
-            document.getElementById('emailInput').value = '';
-            document.getElementById('passwordInput').value = '';
+            document.getElementById('emailAuthSection').style.display = 'none';
         }
 
-        async function loginWithDiscord() {
-            if (!supabase) {
-                alert('Supabase nie skonfigurowany');
+        async function signUpWithEmail() {
+            if (!supabase) return;
+            
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!email || !password) {
+                alert('Wpisz email i hasło');
                 return;
             }
 
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'discord',
-                options: {
-                    redirectTo: window.location.origin
-                }
+            const { error } = await supabase.auth.signUp({
+                email,
+                password
             });
-            
-            if (error) alert('Błąd logowania: ' + error.message);
+
+            if (error) {
+                alert('Błąd rejestracji: ' + error.message);
+            } else {
+                alert('Konto utworzone! Sprawdź email.');
+                hideEmailAuth();
+            }
         }
 
-        async function signUpEmail() {
-             if (!supabase) {
-                 alert('Supabase nie skonfigurowany');
-                 return;
-             }
+        async function signInWithEmail() {
+            if (!supabase) return;
+             
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
 
-             const email = document.getElementById('emailInput').value;
-             const password = document.getElementById('passwordInput').value;
+            if (!email || !password) {
+                alert('Wpisz email i hasło');
+                return;
+            }
 
-             if (!email || !password) {
-                 alert('Wpisz email i hasło');
-                 return;
-             }
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
 
-             const { error } = await supabase.auth.signUp({
-                 email,
-                 password
-             });
-
-             if (error) {
-                 alert('Błąd rejestracji: ' + error.message);
-             } else {
-                 alert('Rejestracja udana! Sprawdź swój email w celu potwierdzenia.');
-                 hideEmailAuth();
-             }
-         }
-
-        async function loginEmail() {
-             if (!supabase) {
-                 alert('Supabase nie skonfigurowany');
-                 return;
-             }
-
-             const email = document.getElementById('emailInput').value;
-             const password = document.getElementById('passwordInput').value;
-
-             if (!email || !password) {
-                 alert('Wpisz email i hasło');
-                 return;
-             }
-
-             const { error } = await supabase.auth.signInWithPassword({
-                 email,
-                 password
-             });
-
-             if (error) {
-                 alert('Błąd logowania: ' + error.message);
-             } else {
-                 hideEmailAuth();
-             }
-         }
+            if (error) {
+                alert('Błąd logowania: ' + error.message);
+            } else {
+                hideEmailAuth();
+            }
+        }
 
         async function logout() {
             if (!supabase) return;
@@ -1055,7 +911,7 @@
         function updateUserUI() {
             if (!currentUser) return;
 
-            document.getElementById('userName').textContent = currentUser.user_metadata?.full_name || 'User';
+            document.getElementById('userName').textContent = currentUser.user_metadata?.full_name || 'Użytkownik';
             document.getElementById('userEmail').textContent = currentUser.email || '';
             
             const avatar = document.getElementById('userAvatar');
@@ -1074,6 +930,7 @@
              }
              
              loadUserStats();
+             loadGlobalStats();
         }
 
         async function loadUserStats() {
@@ -1087,7 +944,24 @@
                     updateShareSection(data, currentUser.id);
                 }
             } catch (error) {
-                console.error('Nie udało się załadować statystyk:', error);
+                console.error('Błąd:', error);
+            }
+        }
+
+        async function loadGlobalStats() {
+            try {
+                const response = await fetch('/v1/global-stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('globalCO2').textContent = data.global_co2_saved_kg.toFixed(0);
+                    document.getElementById('globalBikes').textContent = data.global_bike_journeys;
+                    document.getElementById('globalTrees').textContent = data.equivalent_trees.toFixed(0);
+                    document.getElementById('globalUsers').textContent = data.total_users;
+                    document.getElementById('globalStats').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Błąd globalnych statystyk:', error);
             }
         }
 
@@ -1148,7 +1022,7 @@
              const link = document.createElement('a');
              link.href = graphicUrl;
              link.target = '_blank';
-             link.download = `my-carbon-impact-${userId}.png`;
+             link.download = `moj-wplyw-${userId}.png`;
              document.body.appendChild(link);
              link.click();
              document.body.removeChild(link);
@@ -1172,7 +1046,7 @@
             }
 
             btn.disabled = true;
-            msg.textContent = '🔄 Liczę...';
+            msg.textContent = '🔄 Obliczam...';
             msg.classList.remove('error');
             msg.classList.add('loading');
 
@@ -1225,7 +1099,6 @@
             const distance = data.distance_km;
             const travelTime = data.travel_times;
             const impact = data.environmental_impact;
-            const vehicle = data.closest_vehicle;
 
             maxCO2 = Math.max(maxCO2, co2 * 1.2);
             const percentage = (co2 / maxCO2) * 100;
@@ -1271,10 +1144,6 @@
                         </div>
                     </div>
                 </div>
-                ${vehicle ? `<div class="bento-box">
-                    <div class="bento-value">${vehicle.bikes_available}</div>
-                    <div class="bento-label">Rowery w pobliżu</div>
-                </div>` : ''}
             `;
         }
 
@@ -1297,7 +1166,7 @@
                 (position) => {
                     document.getElementById('startLat').value = position.coords.latitude.toFixed(4);
                     document.getElementById('startLon').value = position.coords.longitude.toFixed(4);
-                    msg.textContent = '✓ Lokalizacja ustawiona. Wprowadź cel i liczę.';
+                    msg.textContent = '✓ Lokalizacja ustawiona. Wprowadź cel i oblicz.';
                     msg.classList.remove('loading');
                     btn.disabled = false;
                 },
