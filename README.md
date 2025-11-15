@@ -37,14 +37,6 @@ sqrt(CO) to innowacyjna aplikacja, która pozwala na śledzenie wpływu Twoich d
 - **Informacja o statusie netto**: Wizualne potwierdzenie czy podróż przynosi oszczędności czy emisje
 - **Zaawansowane grafiki do udostępniania**: Raport statystyk użytkownika z pokazaniem wpływu netto
 
-### Ulepszenia Techniczne
-- **Optymalizacja wydajności**: Zmniejszone rozmiary żądań, szybsza przebudowa UI
-- **Polskie interfejsy**: 100% tekstu w interfejsie w języku polskim
-- **Responsywny design**: Obsługa urządzeń mobilnych z pełną funkcjonalnością
-- **Bezpieczne uwierzytelnianie**: OAuth2 (Google, Discord) + email/hasło
-- **Caching**: Inteligentne cache'owanie wyników stacji
-- **Zoptymalizowana baza danych**: Efektywne zapytania do Supabase z indeksami
-
 ### Design & UX
 - **Nowoczesny interfejs**: Minimalistyczny dark mode z akcentami zielonymi
 - **Wizualizacja danych**: Bento grid dla przejrzystej prezentacji statystyk
@@ -169,8 +161,8 @@ python app.py
 ### Instalacja z Docker
 
 #### Wymagania
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://docs.docker.com/get-docker/) z Docker Buildx
+- Linux, macOS lub Windows z WSL2
 
 #### Szybki start
 
@@ -191,38 +183,53 @@ ADRES_SUPABASE=https://your-project.supabase.co
 KLUCZ_SUPABASE=your_anon_key
 ```
 
-3. **Uruchom aplikację**
+3. **Zbuduj obraz Docker**
 ```bash
-docker-compose up -d
+docker buildx build -t sqrt-co:latest .
+```
+
+4. **Uruchom kontener**
+```bash
+docker run -d \
+  -p 8080:8080 \
+  --env-file .env \
+  --name sqrt-co \
+  sqrt-co:latest
 ```
 
 Aplikacja będzie dostępna pod adresem: `http://localhost:8080`
 
-#### Polecenia Docker
+#### Polecenia Docker Buildx
 
-**Uruchomienie aplikacji**
+**Budowanie dla obecnej platformy**
 ```bash
-docker-compose up
+docker buildx build -t sqrt-co:latest .
 ```
 
-**Uruchomienie w tle**
+**Budowanie dla wielu platform (AMD64, ARM64)**
 ```bash
-docker-compose up -d
+docker buildx build --platform linux/amd64,linux/arm64 -t sqrt-co:latest .
 ```
 
-**Zatrzymanie aplikacji**
+**Uruchomienie kontenera**
 ```bash
-docker-compose down
+docker run -d -p 8080:8080 --env-file .env --name sqrt-co sqrt-co:latest
+```
+
+**Zatrzymanie kontenera**
+```bash
+docker stop sqrt-co
+docker rm sqrt-co
 ```
 
 **Wyświetlanie logów**
 ```bash
-docker-compose logs -f app
+docker logs -f sqrt-co
 ```
 
-**Budowanie obrazu na nowo**
+**Usuwanie obrazu**
 ```bash
-docker-compose build --no-cache
+docker rmi sqrt-co:latest
 ```
 
 
