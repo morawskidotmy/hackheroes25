@@ -1,4 +1,4 @@
-# sqrtco
+# sqrt(CO)
 
 Aplikacja do śledzenia wpływu na klimat poprzez wybór roweru zamiast samochodu.
 
@@ -8,7 +8,7 @@ Aplikacja do śledzenia wpływu na klimat poprzez wybór roweru zamiast samochod
 
 ## O aplikacji
 
-sqrtco to innowacyjna aplikacja, która pozwala na śledzenie wpływu Twoich decyzji transportowych na klimat. Każda podróż rowerem przyczynia się do realnych oszczędności CO₂, które możesz monitorować i dzielić się nimi w mediach społecznych. Aplikacja wspiera polskich użytkowników w zmianie nawyków transportowych i budowaniu świadomości ekologicznej.
+sqrt(CO) to innowacyjna aplikacja, która pozwala na śledzenie wpływu Twoich decyzji transportowych na klimat. Każda podróż rowerem przyczynia się do realnych oszczędności CO₂, które możesz monitorować i dzielić się nimi w mediach społecznych. Aplikacja wspiera polskich użytkowników w zmianie nawyków transportowych i budowaniu świadomości ekologicznej.
 
 ### Co możesz robić:
 

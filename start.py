@@ -34,7 +34,7 @@ def zapisz_log(msg):
 
 def czysc_log():
     with open(PLIK_LOGU, 'w') as f:
-        f.write(f"sqrtco - Kalkulator CO2 Rowerów - Log Testowy\n")
+        f.write(f"sqrt(CO) - Kalkulator CO2 Rowerów - Log Testowy\n")
         f.write(f"Rozpoczęto: {datetime.now()}\n")
         f.write("=" * 80 + "\n\n")
 
@@ -143,8 +143,8 @@ def testuj_api():
 def main():
     czysc_log()
     
-    drukuj_status("Uruchamianie sqrtco - Kalkulatora CO2 Rowerów...")
-    zapisz_log("Uruchamianie sqrtco - Kalkulatora CO2 Rowerów...\n")
+    drukuj_status("Uruchamianie sqrt(CO) - Kalkulatora CO2 Rowerów...")
+    zapisz_log("Uruchamianie sqrt(CO) - Kalkulatora CO2 Rowerów...\n")
     print()
     
     drukuj_status("Instalowanie zależności...")
