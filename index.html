@@ -1058,7 +1058,7 @@
              const userId = currentUser?.id;
              if (!userId) return;
              
-             const shareUrl = `${window.location.origin}?share=${userId}`;
+             const shareUrl = `${window.location.origin}/share?share=${userId}`;
              const linkDiv = document.getElementById('shareLink');
              linkDiv.textContent = shareUrl;
              linkDiv.style.display = 'block';
@@ -1074,10 +1074,10 @@
          }
 
         function shareGraphic() {
-            const userId = currentUser?.id;
-            if (!userId) return;
-            
-            const shareUrl = `${window.location.origin}?share=${userId}`;
+             const userId = currentUser?.id;
+             if (!userId) return;
+             
+             const shareUrl = `${window.location.origin}/share?share=${userId}`;
             
             if (navigator.share) {
                 navigator.share({
@@ -1443,10 +1443,6 @@
              }
              return false;
          }
-
-        if (new URLSearchParams(window.location.search).get('share')) {
-             window.location.href = `/v1/share-graphic-stats/${new URLSearchParams(window.location.search).get('share')}`;
-        }
 
         window.addEventListener('load', async () => {
              await initSupabase();
