@@ -458,25 +458,19 @@ def wygeneruj_grafike_statystyk(user_id):
         
         wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
         
-        laczsny_co2_oszczedzony = 0
-        laczsny_co2_emitowany = 0
         podroze_rowerem = 0
-        podroze_samochodem = 0
+        laczsny_co2_oszczedzony = 0
         
         if wynik_statystyk.data:
             stat_uzytkownika = wynik_statystyk.data[0]
             laczsny_co2_oszczedzony = stat_uzytkownika['total_co2_saved_kg']
-            laczsny_co2_emitowany = stat_uzytkownika.get('total_co2_emitted_kg', 0)
             podroze_rowerem = stat_uzytkownika['total_bike_journeys']
-            podroze_samochodem = stat_uzytkownika['total_car_journeys']
         
-        wynik_obliczen = klient_supabase.table('co2_calculations').select('co2_savings_kg').eq('user_id', user_id).execute()
+        wynik_obliczen = klient_supabase.table('co2_calculations').select('distance_km,co2_savings_kg').eq('user_id', user_id).execute()
+        laczsny_dystans = sum(item['distance_km'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         
         laczsny_co2_oszczedzony += stary_co2
-        
-        saldo_netto = laczsny_co2_oszczedzony - laczsny_co2_emitowany
-        jest_pozytywne = saldo_netto >= 0
         
         szerokosc, wysokosc = 1200, 630
         obraz = Image.new('RGB', (szerokosc, wysokosc), color='#000000')
@@ -498,30 +492,21 @@ def wygeneruj_grafike_statystyk(user_id):
             kolor = (odcien, odcien, odcien)
             rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
         
-        kolor_akcentu = '#00ff00' if jest_pozytywne else '#ff6b6b'
-        rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill=kolor_akcentu)
+        rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill='#00ff00')
         
         tytul = "Mój wpływ na klimat"
-        rysowanie.text((szerokosc//2, 80), tytul, fill=kolor_akcentu, font=czcionka_tytul, anchor="mm")
+        rysowanie.text((szerokosc//2, 80), tytul, fill='#00ff00', font=czcionka_tytul, anchor="mm")
         
-        tekst_netto = f"{abs(saldo_netto):.1f}"
-        rysowanie.text((szerokosc//2, 250), tekst_netto, fill=kolor_akcentu, font=czcionka_wartosc, anchor="mm")
+        tekst_co2 = f"{laczsny_co2_oszczedzony:.1f}"
+        rysowanie.text((szerokosc//2, 250), tekst_co2, fill='#00ff00', font=czcionka_wartosc, anchor="mm")
         
-        tekst_jednostka = "kg CO₂ ZAOSZCZĘDZONO" if jest_pozytywne else "kg CO₂ EMISJI"
-        rysowanie.text((szerokosc//2, 360), tekst_jednostka, fill='#ffffff', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, 360), "kg CO₂ OSZCZĘDZONO", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
         y_statystyk = 450
-        tekst_statystyk = f"Podróże rowerem: {podroze_rowerem} | Samochodem: {podroze_samochodem} | Oszczędzono: {laczsny_co2_oszczedzony:.1f} kg"
+        tekst_statystyk = f"Podróże: {podroze_rowerem} | Kilometraż: {laczsny_dystans:.1f} km"
         rysowanie.text((szerokosc//2, y_statystyk), tekst_statystyk, fill='#888888', font=czcionka_mala, anchor="mm")
         
-        if jest_pozytywne:
-            tekst_statusu = "✓ NET POZYTYWNIE"
-            kolor_statusu = '#00ff00'
-        else:
-            tekst_statusu = "⚠ NET NEGATYWNIE"
-            kolor_statusu = '#ff6b6b'
-        
-        rysowanie.text((szerokosc//2, wysokosc-60), tekst_statusu, fill=kolor_statusu, font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, wysokosc-60), "hh25.morawski.my", fill='#666666', font=czcionka_etykieta, anchor="mm")
         
         img_io = BytesIO()
         obraz.save(img_io, 'PNG', quality=95)
