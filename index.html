@@ -108,12 +108,15 @@
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            overflow: hidden;
+             width: 40px;
+             height: 40px;
+             border-radius: 50%;
+             background: #1a1a1a;
+             border: 1px solid #333;
+             overflow: hidden;
+             display: flex;
+             align-items: center;
+             justify-content: center;
         }
 
         .user-avatar img {
@@ -931,7 +934,7 @@
             if (error) {
                 showNotification('Błąd rejestracji: ' + error.message, 'error');
             } else {
-                showNotification('Konto utworzone! Sprawdź email.', 'success');
+                showNotification('Konto utworzone!', 'success');
                 hideEmailAuth();
             }
             }
