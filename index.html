@@ -86,7 +86,6 @@
             background: #222;
         }
 
-        .google-btn { border-color: #4285f4; }
         .discord-btn { border-color: #5865f2; }
         .email-btn { border-color: #00ff00; }
 
@@ -660,7 +659,6 @@
         <div class="auth-box">
             <h2>Zaloguj się</h2>
             <div class="auth-buttons">
-                <button class="auth-btn google-btn" onclick="signInWithGoogle()">🔐 Google</button>
                 <button class="auth-btn discord-btn" onclick="signInWithDiscord()">💜 Discord</button>
                 <button class="auth-btn email-btn" onclick="showEmailAuth()">✉️ Email</button>
             </div>
@@ -830,12 +828,6 @@
             } catch (error) {
                 console.error('Błąd inicjalizacji Supabase:', error);
             }
-        }
-
-        async function signInWithGoogle() {
-            if (!supabase) return;
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-            if (error) alert('Błąd logowania Google: ' + error.message);
         }
 
         async function signInWithDiscord() {
