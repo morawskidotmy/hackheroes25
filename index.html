@@ -98,6 +98,43 @@
             gap: 15px;
         }
 
+        .history-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-btn:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        @media (max-width: 768px) {
+            .history-btn {
+                position: fixed;
+                bottom: 80px;
+                left: 20px;
+                right: auto;
+                top: auto;
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+
         .user-info {
             text-align: right;
         }
@@ -744,6 +781,8 @@
     </style>
 </head>
 <body>
+    <a href="/history" class="history-btn" id="historyBtn" style="display: none;">📋 Historia</a>
+    
     <div id="authModal" class="auth-modal">
         <div class="auth-box">
             <h2>Zaloguj się</h2>
@@ -1022,6 +1061,7 @@
             }
 
             document.getElementById('userHeader').style.display = 'flex';
+            document.getElementById('historyBtn').style.display = 'flex';
             
             if (currentCalculation) {
                  document.getElementById('transportSection').classList.add('visible');

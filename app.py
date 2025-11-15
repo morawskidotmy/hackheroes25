@@ -583,6 +583,17 @@ def share():
         return jsonify({'error': 'Plik nie znaleziony'}), 404
 
 
+@app.route('/history', methods=['GET'])
+def history():
+    try:
+        with open('history.html', 'r') as f:
+            zawartosc = f.read()
+        
+        return zawartosc, 200, {'Content-Type': 'text/html'}
+    except FileNotFoundError:
+        return jsonify({'error': 'Plik nie znaleziony'}), 404
+
+
 @app.errorhandler(404)
 def nie_znaleziono(e):
     return jsonify({'error': 'Endpoint nie znaleziony'}), 404

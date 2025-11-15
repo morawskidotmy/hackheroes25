@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sqrt(CO) - Historia podróży</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .trips-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .trip-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 25px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 250px;
+        }
+
+        .trip-card:hover {
+            border-color: #00ff00;
+        }
+
+        .trip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .trip-transport {
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        .trip-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .trip-type.bike {
+            color: #00ff00;
+        }
+
+        .trip-type.car {
+            color: #ff6b6b;
+        }
+
+        .trip-date {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: right;
+        }
+
+        .trip-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .trip-detail {
+            padding: 10px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .trip-detail:last-child {
+            border-bottom: none;
+        }
+
+        .trip-detail-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .trip-detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff00;
+        }
+
+        .trip-detail-value.red {
+            color: #ff6b6b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #888;
+        }
+
+        .empty-state a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .empty-state a:hover {
+            background: #cccccc;
+        }
+
+        .user-header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .logout-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .user-header {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                top: auto;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                padding: 12px 15px;
+                border-radius: 12px;
+                z-index: 500;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #00ff00;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px 20px;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-header" id="userHeader" style="display: none;">
+        <div class="user-info">
+            <div class="user-name" id="userName"></div>
+        </div>
+        <div class="user-avatar" id="userAvatar"></div>
+        <button class="logout-btn" onclick="logout()">Wyloguj</button>
+    </div>
+
+    <div class="container">
+        <a href="/" class="back-btn">← Powrót</a>
+        
+        <div class="header">
+            <h1>Historia podróży</h1>
+        </div>
+
+        <div id="content" class="loading">Ładowanie...</div>
+    </div>
+
+    <script>
+        let supabase;
+        let currentUser = null;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/config');
+                const config = await response.json();
+                
+                if (config.adres_supabase && config.klucz_supabase) {
+                    supabase = window.supabase.createClient(config.adres_supabase, config.klucz_supabase);
+                    
+                    supabase.auth.onAuthStateChange((event, session) => {
+                        if (session) {
+                            currentUser = session.user;
+                            updateUserUI();
+                            loadHistory();
+                        } else {
+                            currentUser = null;
+                            window.location.href = '/';
+                        }
+                    });
+                    
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        updateUserUI();
+                        loadHistory();
+                    } else {
+                        window.location.href = '/';
+                    }
+                }
+            } catch (error) {
+                console.error('Błąd inicjalizacji Supabase:', error);
+            }
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+
+            document.getElementById('userName').textContent = currentUser.user_metadata?.full_name || 'Użytkownik';
+            
+            const avatar = document.getElementById('userAvatar');
+            const avatarUrl = currentUser.user_metadata?.avatar_url;
+            
+            if (avatarUrl) {
+                avatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+            } else {
+                avatar.innerHTML = `<span style="font-size: 20px; line-height: 40px;">👤</span>`;
+            }
+
+            document.getElementById('userHeader').style.display = 'flex';
+        }
+
+        async function loadHistory() {
+            if (!currentUser || !supabase) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('journey_tracking')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const contentDiv = document.getElementById('content');
+
+                if (!data || data.length === 0) {
+                    contentDiv.innerHTML = `
+                        <div class="empty-state">
+                            <p>Brak podróży w historii</p>
+                            <a href="/" class="back-btn">Oblicz swoją pierwszą podróż</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const tripsHTML = data.map(trip => {
+                    const date = new Date(trip.created_at);
+                    const dateStr = date.toLocaleDateString('pl-PL', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    const isHike = trip.chosen_transport === 'bike';
+                    const transport = isHike ? '🚴' : '🚗';
+                    const typeClass = isHike ? 'bike' : 'car';
+                    const typeText = isHike ? 'Rower' : 'Samochód';
+
+                    return `
+                        <div class="trip-card">
+                            <div class="trip-header">
+                                <div>
+                                    <div class="trip-transport">${transport}</div>
+                                    <div class="trip-type ${typeClass}">${typeText}</div>
+                                </div>
+                                <div class="trip-date">${dateStr}</div>
+                            </div>
+                            <div class="trip-details">
+                                <div class="trip-detail">
+                                    <div class="trip-detail-label">Dystans</div>
+                                    <div class="trip-detail-value">${trip.distance_km.toFixed(2)} km</div>
+                                </div>
+                                <div class="trip-detail">
+                                    <div class="trip-detail-label">CO₂ ${isHike ? 'Oszczędzono' : 'Emisji'}</div>
+                                    <div class="trip-detail-value ${isHike ? '' : 'red'}">${trip.potential_co2_savings_kg.toFixed(3)} kg</div>
+                                </div>
+                                ${trip.bike_type ? `
+                                    <div class="trip-detail">
+                                        <div class="trip-detail-label">Typ roweru</div>
+                                        <div class="trip-detail-value">${trip.bike_type === 'own' ? 'Własny' : 'MEVO'}</div>
+                                    </div>
+                                ` : ''}
+                                ${trip.nearest_station_name ? `
+                                    <div class="trip-detail">
+                                        <div class="trip-detail-label">Stacja</div>
+                                        <div class="trip-detail-value">${trip.nearest_station_name}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                contentDiv.innerHTML = `<div class="trips-list">${tripsHTML}</div>`;
+            } catch (error) {
+                console.error('Błąd ładowania historii:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="error">Błąd ładowania historii: ${error.message}</div>
+                `;
+            }
+        }
+
+        function logout() {
+            if (supabase) {
+                supabase.auth.signOut().then(() => {
+                    window.location.href = '/';
+                });
+            }
+        }
+
+        window.addEventListener('load', initSupabase);
+    </script>
+</body>
+</html>
