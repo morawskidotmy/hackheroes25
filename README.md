@@ -157,6 +157,8 @@ Generuj efektowne grafiki PNG (1200x630 px):
 
 ## Instalacja
 
+### Lokalna instalacja
+
 ```bash
 pip install -r requirements.txt
 export ADRES_SUPABASE="https://your-project.supabase.co"
@@ -164,26 +166,63 @@ export KLUCZ_SUPABASE="your_anon_key"
 python app.py
 ```
 
----
+### Instalacja z Docker
 
-## Zgodność z kryteriami konkursu
+#### Wymagania
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Przydatność społeczna (1-5)
-Aplikacja promuje zdrowy styl życia, świadomość ekologiczną i wspiera decyzje pro-środowiskowe. Integracja z realnym systemem MEVO zwiększa praktyczne zastosowanie.
+#### Szybki start
 
-### Pomysł (1-5)
-Gamifikacja oszczędności CO₂ z wizualizacją wpływu na klimat jest innowacyjnym podejściem do zmiany nawyków transportowych.
+1. **Sklonuj repozytorium**
+```bash
+git clone https://github.com/morawskidotmy/hackheroes25.git
+cd hackheroes25
+```
 
-### Wykonanie - Estetyka (1-3)
-Nowoczesny dark mode z minimalistycznym designem, efektowne animacje, responsywna siatka CSS Grid.
+2. **Skonfiguruj zmienne środowiskowe**
+```bash
+cp .env.example .env
+```
 
-### Wykonanie - Responsywność/Szybkość (1-3)
-Aplikacja jest zoptymalizowana pod względem wydajności: szybkie żądania API, asynchroniczny JavaScript, cache'owanie wyników, minimalne TTFB.
+Edytuj plik `.env` i dodaj swoje klucze Supabase:
+```
+ADRES_SUPABASE=https://your-project.supabase.co
+KLUCZ_SUPABASE=your_anon_key
+```
 
-### Wykorzystane technologie (0-2 bonus)
-- **Real-time API** z MEVO (GBFS)
-- **Generowanie grafik** PNG na serwerze
-- **OAuth2** z Google i Discord
-- **Geolokalizacja** w przeglądarce
-- **Supabase** jako BaaS z RLS
-- **Algoritmy geograficzne** (Haversine)
+3. **Uruchom aplikację**
+```bash
+docker-compose up -d
+```
+
+Aplikacja będzie dostępna pod adresem: `http://localhost:8080`
+
+#### Polecenia Docker
+
+**Uruchomienie aplikacji**
+```bash
+docker-compose up
+```
+
+**Uruchomienie w tle**
+```bash
+docker-compose up -d
+```
+
+**Zatrzymanie aplikacji**
+```bash
+docker-compose down
+```
+
+**Wyświetlanie logów**
+```bash
+docker-compose logs -f app
+```
+
+**Budowanie obrazu na nowo**
+```bash
+docker-compose build --no-cache
+```
+
+
