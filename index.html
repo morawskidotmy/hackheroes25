@@ -1367,13 +1367,12 @@
                         document.getElementById('message').textContent = '✓ Lokalizacja wykryta. Wpisz cel i oblicz.';
                     },
                     (error) => {
-                        document.getElementById('message').textContent = '❌ Błąd lokalizacji: ' + error.message + '. Wpisz współrzędne ręcznie.';
-                        document.getElementById('message').classList.add('error');
-                    }
+                        document.getElementById('message').textContent = 'Włącz uprawnienia lokalizacji lub wpisz współrzędne ręcznie.';
+                    },
+                    { timeout: 5000 }
                 );
             } else {
-                document.getElementById('message').textContent = '❌ Geolokalizacja nie jest wspierana. Wpisz współrzędne ręcznie.';
-                document.getElementById('message').classList.add('error');
+                document.getElementById('message').textContent = 'Wpisz współrzędne ręcznie.';
             }
         });
     </script>
