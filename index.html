@@ -1444,10 +1444,12 @@
              return false;
          }
 
+        if (new URLSearchParams(window.location.search).get('share')) {
+             window.location.href = `/v1/share-graphic-stats/${new URLSearchParams(window.location.search).get('share')}`;
+        }
+
         window.addEventListener('load', async () => {
-            if (checkShareMode()) return;
-            
-            await initSupabase();
+             await initSupabase();
 
             document.getElementById('calcBtn').disabled = false;
             document.getElementById('locationBtn').disabled = false;
