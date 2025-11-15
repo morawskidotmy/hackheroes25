@@ -440,6 +440,57 @@
             color: #00ff00;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            max-width: 400px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .notification.error {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .notification.info {
+            border-color: #888;
+            color: #aaa;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+        }
+
         .station-result {
             background: #1a1a1a;
             border: 1px solid #333;
@@ -809,16 +860,19 @@
                     supabase = window.supabase.createClient(config.adres_supabase, config.klucz_supabase);
                     
                     supabase.auth.onAuthStateChange((event, session) => {
-                        if (session) {
-                            currentUser = session.user;
-                            document.getElementById('authModal').classList.add('hidden');
-                            updateUserUI();
-                        } else {
-                            currentUser = null;
-                            document.getElementById('userHeader').style.display = 'none';
-                            document.getElementById('authModal').classList.remove('hidden');
-                        }
-                    });
+                         if (session) {
+                             currentUser = session.user;
+                             document.getElementById('authModal').classList.add('hidden');
+                             updateUserUI();
+                         } else {
+                             currentUser = null;
+                             document.getElementById('userHeader').style.display = 'none';
+                             const params = new URLSearchParams(window.location.search);
+                             if (!params.get('share')) {
+                                 document.getElementById('authModal').classList.remove('hidden');
+                             }
+                         }
+                     });
                     
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session) {
@@ -833,10 +887,10 @@
         }
 
         async function signInWithDiscord() {
-            if (!supabase) return;
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });
-            if (error) alert('Błąd logowania Discord: ' + error.message);
-        }
+             if (!supabase) return;
+             const { error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });
+             if (error) showNotification('Błąd logowania Discord: ' + error.message, 'error');
+         }
 
         function showEmailAuth() {
             document.getElementById('emailAuthSection').style.display = 'block';
@@ -853,7 +907,7 @@
             const password = document.getElementById('passwordInput').value;
 
             if (!email || !password) {
-                alert('Wpisz email i hasło');
+                showNotification('Wpisz email i hasło', 'error');
                 return;
             }
 
@@ -863,12 +917,12 @@
             });
 
             if (error) {
-                alert('Błąd rejestracji: ' + error.message);
+                showNotification('Błąd rejestracji: ' + error.message, 'error');
             } else {
-                alert('Konto utworzone! Sprawdź email.');
+                showNotification('Konto utworzone! Sprawdź email.', 'success');
                 hideEmailAuth();
             }
-        }
+            }
 
         async function signInWithEmail() {
             if (!supabase) return;
@@ -877,7 +931,7 @@
             const password = document.getElementById('passwordInput').value;
 
             if (!email || !password) {
-                alert('Wpisz email i hasło');
+                showNotification('Wpisz email i hasło', 'error');
                 return;
             }
 
@@ -887,7 +941,7 @@
             });
 
             if (error) {
-                alert('Błąd logowania: ' + error.message);
+                showNotification('Błąd logowania: ' + error.message, 'error');
             } else {
                 hideEmailAuth();
             }
@@ -902,8 +956,20 @@
             document.getElementById('authModal').classList.remove('hidden');
         }
 
+        function showNotification(message, type = 'info') {
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
         function updateUserUI() {
-            if (!currentUser) return;
+             if (!currentUser) return;
 
             document.getElementById('userName').textContent = currentUser.user_metadata?.full_name || 'Użytkownik';
             document.getElementById('userEmail').textContent = currentUser.email || '';
@@ -977,18 +1043,18 @@
          }
 
         function copyShareLink() {
-            const userId = currentUser?.id;
-            if (!userId) return;
-            
-            const shareUrl = `${window.location.origin}?share=${userId}`;
-            const linkDiv = document.getElementById('shareLink');
-            linkDiv.textContent = shareUrl;
-            linkDiv.style.display = 'block';
-            
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                 alert('✓ Link skopiowany do schowka!');
-             });
-        }
+             const userId = currentUser?.id;
+             if (!userId) return;
+             
+             const shareUrl = `${window.location.origin}?share=${userId}`;
+             const linkDiv = document.getElementById('shareLink');
+             linkDiv.textContent = shareUrl;
+             linkDiv.style.display = 'block';
+             
+             navigator.clipboard.writeText(shareUrl).then(() => {
+                  showNotification('✓ Link skopiowany do schowka!', 'success');
+              });
+         }
 
         function shareGraphic() {
             const userId = currentUser?.id;
@@ -1008,21 +1074,21 @@
         }
 
         function shareStatsGraphic() {
-             const userId = currentUser?.id;
-             if (!userId) return;
-             
-             const graphicUrl = `/v1/share-graphic-stats/${userId}`;
-             
-             const link = document.createElement('a');
-             link.href = graphicUrl;
-             link.target = '_blank';
-             link.download = `moj-wplyw-${userId}.png`;
-             document.body.appendChild(link);
-             link.click();
-             document.body.removeChild(link);
-             
-             alert('✓ Grafika pobrana! Udostępnij ją na mediach społecznych.');
-         }
+              const userId = currentUser?.id;
+              if (!userId) return;
+              
+              const graphicUrl = `/v1/share-graphic-stats/${userId}`;
+              
+              const link = document.createElement('a');
+              link.href = graphicUrl;
+              link.target = '_blank';
+              link.download = `moj-wplyw-${userId}.png`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              showNotification('✓ Grafika pobrana! Udostępnij ją na mediach społecznych.', 'success');
+          }
 
         async function calculate() {
             const startLat = parseFloat(document.getElementById('startLat').value);
@@ -1267,15 +1333,15 @@
         }
 
         async function saveJourney() {
-            if (!currentUser) {
-                alert('Zaloguj się najpierw');
-                return;
-            }
+             if (!currentUser) {
+                 showNotification('Zaloguj się najpierw', 'error');
+                 return;
+             }
 
-            if (!selectedTransport) {
-                alert('Wybierz rower lub samochód');
-                return;
-            }
+             if (!selectedTransport) {
+                 showNotification('Wybierz rower lub samochód', 'error');
+                 return;
+             }
 
             const startLat = parseFloat(document.getElementById('startLat').value);
             const startLon = parseFloat(document.getElementById('startLon').value);
@@ -1283,7 +1349,7 @@
             const endLon = parseFloat(document.getElementById('endLon').value);
 
             if (!startLat || !startLon || !endLat || !endLon) {
-                alert('Wprowadź wszystkie współrzędne');
+                showNotification('Wprowadź wszystkie współrzędne', 'error');
                 return;
             }
 
@@ -1341,16 +1407,59 @@
                          saveBtn.disabled = true;
                      }, 1000);
                 } else {
-                    alert('❌ Nie udało się zapisać podróży: ' + (data.error || 'Nieznany błąd'));
+                    showNotification('❌ Nie udało się zapisać podróży: ' + (data.error || 'Nieznany błąd'), 'error');
                 }
-            } catch (error) {
-                alert('❌ Błąd: ' + error.message);
-            } finally {
+                } catch (error) {
+                showNotification('❌ Błąd: ' + error.message, 'error');
+                } finally {
                 saveBtn.disabled = false;
-            }
+                }
         }
 
+        function displayShareMode(shareUserId) {
+             document.getElementById('authModal').classList.add('hidden');
+             document.getElementById('userHeader').style.display = 'none';
+             document.getElementById('container').style.display = 'none';
+             
+             const shareContainer = document.createElement('div');
+             shareContainer.style.cssText = 'width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;';
+             
+             const img = document.createElement('img');
+             img.src = `/v1/share-graphic-stats/${shareUserId}`;
+             img.style.cssText = 'width: 100%; max-width: 1200px; height: auto; border-radius: 12px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);';
+             img.onerror = () => {
+                 shareContainer.innerHTML = '<p style="color: #ff6b6b;">❌ Nie znaleziono danych użytkownika</p>';
+             };
+             
+             shareContainer.appendChild(img);
+             
+             const backBtn = document.createElement('button');
+             backBtn.textContent = 'Wróć';
+             backBtn.style.cssText = 'margin-top: 30px; padding: 10px 20px; background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 8px; font-size: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;';
+             backBtn.onmouseover = () => { backBtn.style.borderColor = '#00ff00'; backBtn.style.color = '#00ff00'; };
+             backBtn.onmouseout = () => { backBtn.style.borderColor = '#333'; backBtn.style.color = '#888'; };
+             backBtn.onclick = () => {
+                 window.location.href = window.location.origin;
+             };
+             shareContainer.appendChild(backBtn);
+             
+             document.body.appendChild(shareContainer);
+        }
+
+        function checkShareMode() {
+             const params = new URLSearchParams(window.location.search);
+             const shareUserId = params.get('share');
+             
+             if (shareUserId) {
+                 displayShareMode(shareUserId);
+                 return true;
+             }
+             return false;
+         }
+
         window.addEventListener('load', async () => {
+            if (checkShareMode()) return;
+            
             await initSupabase();
 
             document.getElementById('calcBtn').disabled = false;
