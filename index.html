@@ -1288,10 +1288,12 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    currentCalculation = data;
-                    updateProbe(data);
-                    msg.textContent = data.message;
-                    msg.classList.remove('error', 'loading');
+                     currentCalculation = data;
+                     updateProbe(data);
+                     const co2 = data.co2_savings_kg;
+                     const distance = data.distance_km;
+                     msg.textContent = `✓ Oszczędzisz ${co2.toFixed(2)} kg CO₂ na trasie ${distance.toFixed(1)} km! ${data.message}`;
+                     msg.classList.remove('error', 'loading');
                     
                     if (currentUser) {
                          document.getElementById('transportSection').classList.add('visible');
