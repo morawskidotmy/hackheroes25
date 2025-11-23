@@ -540,6 +540,20 @@ def pobierz_globalne_statystyki():
         return jsonify({'error': 'Nie udało się pobrać statystyk', 'details': str(e)}), 500
 
 
+@app.route('/favicon/<path:filename>')
+def serve_favicon(filename):
+    return send_file(f'favicon/{filename}', mimetype='image/x-icon' if filename.endswith('.ico') else 'image/png')
+
+
+@app.route('/favicon/site.webmanifest')
+def serve_manifest():
+    try:
+        with open('favicon/site.webmanifest', 'r') as f:
+            return f.read(), 200, {'Content-Type': 'application/manifest+json'}
+    except FileNotFoundError:
+        return jsonify({'error': 'Manifest not found'}), 404
+
+
 @app.route('/config', methods=['GET'])
 def pobierz_config():
     return jsonify({
