@@ -1,6 +1,6 @@
 import requests
 import math
-from typing import List, Dict, Tuple
+from typing import List, Dict
 import logging
 from cachetools import TTLCache
 from datetime import datetime
@@ -8,9 +8,8 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 mevo_cache = TTLCache(maxsize=100, ttl=300)
-routing_cache = TTLCache(maxsize=500, ttl=600)
 
-def oblicz_dystans_haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
@@ -21,37 +20,6 @@ def oblicz_dystans_haversine(lat1: float, lon1: float, lat2: float, lon2: float)
     c = 2 * math.asin(math.sqrt(a))
     
     return R * c
-
-def oblicz_dystans_osrm(lat1: float, lon1: float, lat2: float, lon2: float) -> Tuple[float, float]:
-    cache_key = f"{lon1},{lat1};{lon2},{lat2}"
-    
-    if cache_key in routing_cache:
-        return routing_cache[cache_key]
-    
-    try:
-        response = requests.get(
-            f"https://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=false",
-            timeout=5
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        if data.get('code') == 'Ok' and data.get('routes'):
-            dystans_km = data['routes'][0]['distance'] / 1000
-            czas_sekund = data['routes'][0]['duration']
-            czas_godzin = czas_sekund / 3600
-            
-            routing_cache[cache_key] = (dystans_km, czas_godzin)
-            return dystans_km, czas_godzin
-    except Exception as e:
-        logger.warning(f"OSRM API error: {e}, falling back to Haversine")
-    
-    dystans = oblicz_dystans_haversine(lat1, lon1, lat2, lon2)
-    return dystans, None
-
-def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    dystans, _ = oblicz_dystans_osrm(lat1, lon1, lat2, lon2)
-    return dystans
 
 class Dostawa_MEVO:
     

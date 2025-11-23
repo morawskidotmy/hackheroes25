@@ -6,7 +6,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
-from providers import Dostawa_MEVO, oblicz_dystans, oblicz_dystans_osrm
+from providers import Dostawa_MEVO, oblicz_dystans
 from io import BytesIO
 from datetime import datetime
 from dotenv import load_dotenv
@@ -161,20 +161,14 @@ def oblicz_co2():
         pojazdy = dostawca.pobierz_pojazdy(lat, lon, promien)
         
         dystans = oblicz_dystans(lat, lon, dest_lat, dest_lon)
-        _, czas_samochod_godzin = oblicz_dystans_osrm(lat, lon, dest_lat, dest_lon)
         
         oszczednosci_co2 = oblicz_oszczednosci_co2(dystans)
         
         czas_rower = formatuj_czas_podrozy(dystans / PREDKOSC_ROWERU_KMH)
-        
-        if czas_samochod_godzin:
-            czas_samochod = formatuj_czas_podrozy(czas_samochod_godzin)
-            czas_samochod_minuty = int(czas_samochod_godzin * 60)
-        else:
-            czas_samochod = formatuj_czas_podrozy(dystans / PREDKOSC_SAMOCHODU_KMH)
-            czas_samochod_minuty = int((dystans / PREDKOSC_SAMOCHODU_KMH) * 60)
+        czas_samochod = formatuj_czas_podrozy(dystans / PREDKOSC_SAMOCHODU_KMH)
         
         czas_rower_minuty = int((dystans / PREDKOSC_ROWERU_KMH) * 60)
+        czas_samochod_minuty = int((dystans / PREDKOSC_SAMOCHODU_KMH) * 60)
         
         najblizszy_pojazd = pojazdy[0] if pojazdy else None
         
