@@ -3,7 +3,7 @@ import os
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import logging
-from providers import Dostawa_MEVO
+from providers import Dostawa_MEVO, oblicz_dystans
 from io import BytesIO
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -34,19 +34,6 @@ app = Flask(__name__)
 CORS(app)
 
 dostawca = Dostawa_MEVO()
-
-def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    R = 6371.0
-    
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-    delta_lat = math.radians(lat2 - lat1)
-    delta_lon = math.radians(lon2 - lon1)
-    
-    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-    c = 2 * math.asin(math.sqrt(a))
-    
-    return R * c
 
 
 def oblicz_oszczednosci_co2(dystans_km: float) -> float:
