@@ -1,7 +1,10 @@
 import math
 import os
+import sys
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import logging
 from providers import Dostawa_MEVO, oblicz_dystans
 from io import BytesIO
@@ -15,12 +18,13 @@ load_dotenv()
 
 ADRES_SUPABASE = os.getenv('ADRES_SUPABASE')
 KLUCZ_SUPABASE = os.getenv('KLUCZ_SUPABASE')
-SUPABASE_DOSTEPNY = ADRES_SUPABASE and KLUCZ_SUPABASE
 
-if SUPABASE_DOSTEPNY:
-    klient_supabase = supabase.create_client(ADRES_SUPABASE, KLUCZ_SUPABASE)
-else:
-    klient_supabase = None
+if not ADRES_SUPABASE or not KLUCZ_SUPABASE:
+    print("ERROR: ADRES_SUPABASE and KLUCZ_SUPABASE must be set in .env")
+    sys.exit(1)
+
+SUPABASE_DOSTEPNY = True
+klient_supabase = supabase.create_client(ADRES_SUPABASE, KLUCZ_SUPABASE)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,7 +35,13 @@ PREDKOSC_SAMOCHODU_KMH = 40.0
 DOMYSLNY_PROMIEN = 2.0
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/v1/*": {"origins": ["https://hh25.morawski.my", "http://localhost:*"]}, r"/health": {"origins": "*"}})
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 dostawca = Dostawa_MEVO()
 
@@ -73,6 +83,7 @@ def health():
 
 
 @app.route('/v1/search-nearest-station', methods=['GET'])
+@limiter.limit("30/hour")
 def szukaj_najblizszej_stacji():
     try:
         lat = request.args.get('latitude', type=float)
@@ -81,6 +92,9 @@ def szukaj_najblizszej_stacji():
         
         if lat is None or lon is None:
             return jsonify({'error': 'Brak szerokości lub długości geograficznej'}), 400
+        
+        if promien < 0 or promien > 50:
+            return jsonify({'error': 'Promień musi być między 0 a 50 km'}), 400
         
         jest_poprawne, komunikat_bledu = waliduj_wspolrzedne(lat, lon)
         if not jest_poprawne:
@@ -114,9 +128,13 @@ def szukaj_najblizszej_stacji():
 
 
 @app.route('/v1/calculate-co2-savings', methods=['POST'])
+@limiter.limit("60/hour")
 def oblicz_co2():
     try:
         dane = request.get_json()
+        
+        if not dane:
+            return jsonify({'error': 'Brakuje danych JSON'}), 400
         
         wymagane_pola = ['latitude', 'longitude', 'destination_latitude', 'destination_longitude']
         if not all(pole in dane for pole in wymagane_pola):
@@ -194,11 +212,15 @@ def oblicz_co2():
 
 
 @app.route('/v1/nearby-stations', methods=['GET'])
+@limiter.limit("30/hour")
 def pobliskie_stacje():
     try:
         lat = request.args.get('latitude', type=float)
         lon = request.args.get('longitude', type=float)
         promien = request.args.get('radius', 1.0, type=float)
+        
+        if promien < 0 or promien > 50:
+            return jsonify({'error': 'Promień musi być między 0 a 50 km'}), 400
         
         if lat is None or lon is None:
             return jsonify({'error': 'Brak szerokości lub długości geograficznej'}), 400
@@ -221,9 +243,13 @@ def pobliskie_stacje():
 
 
 @app.route('/v1/save-journey', methods=['POST'])
+@limiter.limit("100/hour")
 def zapisz_podroze():
     try:
         dane = request.get_json()
+        
+        if not dane:
+            return jsonify({'error': 'Brakuje danych JSON'}), 400
         
         wymagane_pola = ['user_id', 'latitude', 'longitude', 'destination_latitude', 
                           'destination_longitude', 'chosen_transport']
