@@ -110,6 +110,7 @@ Generuj grafiki PNG (1200x630 px) z bilansem CO₂.
 ### Lokalna instalacja
 ```bash
 pip install -r requirements.txt
-export ADRES_SUPABASE="https://your-project.supabase.co"
-export KLUCZ_SUPABASE="your_anon_key"
+# Skopiuj plik .env.example do .env i uzupełnij swoimi kluczami Supabase
+cp .env.example .env
+# Edytuj .env i wstaw swoje dane
 gunicorn -w 1 -b 0.0.0.0:8080 app:app
