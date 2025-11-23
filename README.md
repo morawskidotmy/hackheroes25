@@ -1,5 +1,9 @@
 # sqrt(CO)
 
+<div align="center">
+  <img src="./favicon/apple-touch-icon.png" alt="sqrt(CO) logo" width="120" height="120">
+</div>
+
 Aplikacja do śledzenia wpływu na klimat poprzez wybór roweru zamiast samochodu.
 
 **🌍 Dostępna na: [hh25.morawski.my](https://hh25.morawski.my)**
