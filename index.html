@@ -1381,63 +1381,88 @@
             }
         }
 
+        function calculateETA(minutesFromNow) {
+             const now = new Date();
+             const arrival = new Date(now.getTime() + minutesFromNow * 60000);
+             return arrival.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+         }
+
+         function formatTravelTime(minutes) {
+             if (minutes < 60) {
+                 return `${minutes} minut`;
+             }
+             const hours = Math.floor(minutes / 60);
+             const mins = minutes % 60;
+             if (mins === 0) {
+                 return `${hours} godzina${hours === 1 ? '' : ''}`;
+             }
+             return `${hours} godzina${hours === 1 ? '' : ''} ${mins} minut`;
+         }
+
         function updateProbe(data) {
-            const co2 = data.co2_savings_kg;
-            const distance = data.distance_km;
-            const travelTime = data.travel_times;
-            const impact = data.environmental_impact;
+             const co2 = data.co2_savings_kg;
+             const distance = data.distance_km;
+             const travelTime = data.travel_times;
+             const impact = data.environmental_impact;
 
-            maxCO2 = Math.max(maxCO2, co2 * 1.2);
-            const percentage = (co2 / maxCO2) * 100;
-            
-            const probeBar = document.getElementById('probeBar');
-            probeBar.style.width = percentage + '%';
-            
-            const probeValue = document.getElementById('probeValue');
-            probeValue.textContent = co2.toFixed(2) + ' kg';
-            
-            const probeBarText = document.getElementById('probeBarText');
-            probeBarText.textContent = co2.toFixed(2) + ' kg';
+             const bikeMinutesRaw = travelTime.bike_minutes_raw;
+             const carMinutesRaw = travelTime.car_minutes_raw;
+             const bikeArrival = calculateETA(bikeMinutesRaw);
+             const carArrival = calculateETA(carMinutesRaw);
+             const bikeDisplay = formatTravelTime(bikeMinutesRaw);
+             const carDisplay = formatTravelTime(carMinutesRaw);
 
-            const stats = document.getElementById('stats');
-            stats.innerHTML = `
-                <div class="bento-grid">
-                    <div class="bento-box bento-box-large">
-                        <div class="bento-value large">${co2.toFixed(2)}</div>
-                        <div class="bento-label">CO₂ Oszczędzony (kg)</div>
-                    </div>
-                    <div class="bento-box">
-                        <div class="bento-value">${distance.toFixed(1)}</div>
-                        <div class="bento-label">Odległość (km)</div>
-                    </div>
-                    <div class="bento-box">
-                        <div class="bento-value">${impact.co2_saved_grams}</div>
-                        <div class="bento-label">Gramy CO₂</div>
-                    </div>
-                    <div class="bento-box">
-                        <div class="bento-value">${impact.equivalent_trees.toFixed(1)}</div>
-                        <div class="bento-label">Uratowane drzewa</div>
-                    </div>
-                    <div class="bento-box bento-box-wide">
-                        <div style="display: flex; gap: 50px; width: 100%; justify-content: space-around; align-items: center;">
-                            <div style="flex: 1;">
-                                <div class="bento-value" style="font-size: 28px; margin-bottom: 16px;">🚴</div>
-                                <div class="bento-value" style="font-size: 24px; margin-bottom: 12px;">${travelTime.bike_arrival}</div>
-                                <div class="bento-label">Przyjazd rowerem</div>
-                                <div style="font-size: 13px; color: #999; margin-top: 8px; font-weight: 500;">${travelTime.bike_minutes}</div>
-                            </div>
-                            <div style="width: 1px; height: 80px; background: linear-gradient(180deg, transparent, #333, transparent);"></div>
-                            <div style="flex: 1;">
-                                <div class="bento-value" style="font-size: 28px; margin-bottom: 16px;">🚗</div>
-                                <div class="bento-value" style="font-size: 24px; margin-bottom: 12px;">${travelTime.car_arrival}</div>
-                                <div class="bento-label">Przyjazd samochodem</div>
-                                <div style="font-size: 13px; color: #999; margin-top: 8px; font-weight: 500;">${travelTime.car_minutes}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+             maxCO2 = Math.max(maxCO2, co2 * 1.2);
+             const percentage = (co2 / maxCO2) * 100;
+             
+             const probeBar = document.getElementById('probeBar');
+             probeBar.style.width = percentage + '%';
+             
+             const probeValue = document.getElementById('probeValue');
+             probeValue.textContent = co2.toFixed(2) + ' kg';
+             
+             const probeBarText = document.getElementById('probeBarText');
+             probeBarText.textContent = co2.toFixed(2) + ' kg';
+
+             const stats = document.getElementById('stats');
+             stats.innerHTML = `
+                 <div class="bento-grid">
+                     <div class="bento-box bento-box-large">
+                         <div class="bento-value large">${co2.toFixed(2)}</div>
+                         <div class="bento-label">CO₂ Oszczędzony (kg)</div>
+                     </div>
+                     <div class="bento-box">
+                         <div class="bento-value">${distance.toFixed(1)}</div>
+                         <div class="bento-label">Odległość (km)</div>
+                     </div>
+                     <div class="bento-box">
+                         <div class="bento-value">${impact.co2_saved_grams}</div>
+                         <div class="bento-label">Gramy CO₂</div>
+                     </div>
+                     <div class="bento-box">
+                         <div class="bento-value">${impact.equivalent_trees.toFixed(1)}</div>
+                         <div class="bento-label">Uratowane drzewa</div>
+                     </div>
+                     <div class="bento-box bento-box-wide">
+                         <div style="display: flex; gap: 50px; width: 100%; justify-content: space-around; align-items: center;">
+                             <div style="flex: 1;">
+                                 <div class="bento-value" style="font-size: 28px; margin-bottom: 16px;">🚴</div>
+                                 <div class="bento-value" style="font-size: 24px; margin-bottom: 12px;">${bikeArrival}</div>
+                                 <div class="bento-label">Przyjazd rowerem</div>
+                                 <div style="font-size: 13px; color: #999; margin-top: 8px; font-weight: 500;">${bikeDisplay}</div>
+                             </div>
+                             <div style="width: 1px; height: 80px; background: linear-gradient(180deg, transparent, #333, transparent);"></div>
+                             <div style="flex: 1;">
+                                 <div class="bento-value" style="font-size: 28px; margin-bottom: 16px;">🚗</div>
+                                 <div class="bento-value" style="font-size: 24px; margin-bottom: 12px;">${carArrival}</div>
+                                 <div class="bento-label">Przyjazd samochodem</div>
+                                 <div style="font-size: 13px; color: #999; margin-top: 8px; font-weight: 500;">${carDisplay}</div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             `;
+         }
 
         async function geocodeAddress(address) {
             try {
