@@ -926,13 +926,8 @@
         <div class="button-group">
             <button id="locationBtn" class="location-btn" onclick="getLocation()" disabled>📍 Moja lokalizacja</button>
             <button id="stationBtn" class="location-btn" onclick="searchNearestStation()" disabled>🚲 Szukaj stacji</button>
-            <button id="calcBtn" disabled>⚡ Oblicz</button>
+            <button id="calcBtn" onclick="calculate()" disabled>⚡ Oblicz</button>
         </div>
-
-        <button onclick="calculate()" style="display:none;" id="calcBtnActual"></button>
-        <script>
-            document.getElementById('calcBtn').addEventListener('click', calculate);
-        </script>
 
         <div id="stationResult"></div>
 
@@ -957,11 +952,8 @@
 
             <div id="netNeutralInfo" class="net-neutral-info"></div>
 
-            <button id="saveJourneyBtn" disabled>💾 Zapisz podróż</button>
-            <script>
-                document.getElementById('saveJourneyBtn').addEventListener('click', saveJourney);
-            </script>
-        </div>
+            <button id="saveJourneyBtn" onclick="saveJourney()" disabled>💾 Zapisz podróż</button>
+            </div>
 
         <div id="shareSection" class="share-section">
             <div class="share-title" id="shareTitle">Twoje oszczędności CO₂</div>
