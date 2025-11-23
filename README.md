@@ -62,7 +62,7 @@ sqrt(CO) to nowoczesna aplikacja, która umożliwia monitorowanie wpływu Twoich
 
 ---
 
-## Funkcjonalności
+## Funkcje
 
 ### 1. Obliczanie oszczędności CO₂
 Wprowadź punkty startu i końca, a aplikacja obliczy:
@@ -112,4 +112,4 @@ Generuj grafiki PNG (1200x630 px) z bilansem CO₂.
 pip install -r requirements.txt
 export ADRES_SUPABASE="https://your-project.supabase.co"
 export KLUCZ_SUPABASE="your_anon_key"
-python app.py
+gunicorn -w 1 -b 0.0.0.0:8080 app:app
