@@ -1384,7 +1384,9 @@
         function calculateETA(minutesFromNow) {
              const now = new Date();
              const arrival = new Date(now.getTime() + minutesFromNow * 60000);
-             return arrival.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+             const hours = String(arrival.getHours()).padStart(2, '0');
+             const minutes = String(arrival.getMinutes()).padStart(2, '0');
+             return `${hours}:${minutes}`;
          }
 
          function formatTravelTime(minutes) {
