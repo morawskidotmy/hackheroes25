@@ -8,7 +8,7 @@ from flask_limiter.util import get_remote_address
 import logging
 from providers import Dostawa_MEVO, oblicz_dystans
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime
 from dotenv import load_dotenv
 import supabase
 from PIL import Image, ImageDraw, ImageFont
@@ -170,10 +170,6 @@ def oblicz_co2():
         czas_rower_minuty = int((dystans / PREDKOSC_ROWERU_KMH) * 60)
         czas_samochod_minuty = int((dystans / PREDKOSC_SAMOCHODU_KMH) * 60)
         
-        teraz = datetime.now()
-        przyjazd_rowerem = (teraz + timedelta(minutes=czas_rower_minuty)).strftime("%H:%M")
-        przyjazd_samochodem = (teraz + timedelta(minutes=czas_samochod_minuty)).strftime("%H:%M")
-        
         najblizszy_pojazd = pojazdy[0] if pojazdy else None
         
         id_obliczenia = None
@@ -186,8 +182,8 @@ def oblicz_co2():
             'travel_times': {
                 'bike_minutes': czas_rower,
                 'car_minutes': czas_samochod,
-                'bike_arrival': przyjazd_rowerem,
-                'car_arrival': przyjazd_samochodem
+                'bike_minutes_raw': czas_rower_minuty,
+                'car_minutes_raw': czas_samochod_minuty
             },
             'environmental_impact': {
                 'co2_per_km_car_grams': 120,
