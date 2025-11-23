@@ -1696,19 +1696,20 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const msg = document.getElementById('message');
-                    msg.textContent = `✓ ${data.message}`;
-                    msg.classList.remove('error');
-                    msg.classList.add('loading');
-                    
-                    setTimeout(loadUserStats, 500);
+                     showNotification(`✓ ${data.message}`, 'success');
                      
-                     setTimeout(() => {
-                         selectedTransport = null;
-                         document.getElementById('bikeBtnChoice').classList.remove('selected');
-                         document.getElementById('carBtnChoice').classList.remove('selected');
-                         saveBtn.disabled = true;
-                     }, 1000);
+                     // Hide stats and transport section
+                     document.getElementById('stats').innerHTML = '';
+                     document.getElementById('transportSection').classList.remove('visible');
+                     
+                     setTimeout(loadUserStats, 500);
+                      
+                      setTimeout(() => {
+                          selectedTransport = null;
+                          document.getElementById('bikeBtnChoice').classList.remove('selected');
+                          document.getElementById('carBtnChoice').classList.remove('selected');
+                          saveBtn.disabled = true;
+                      }, 1000);
                 } else {
                     showNotification('❌ Nie udało się zapisać podróży: ' + (data.error || 'Nieznany błąd'), 'error');
                 }
