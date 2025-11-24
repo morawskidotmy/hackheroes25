@@ -488,6 +488,7 @@ def wygeneruj_grafike_dzielenia(user_id):
         
         wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
         wynik_obliczen = klient_supabase.table('co2_calculations').select('co2_savings_kg').eq('user_id', user_id).execute()
+        wynik_podrozy = klient_supabase.table('journey_tracking').select('id').eq('user_id', user_id).execute()
         
         laczsny_co2_saved = 0
         laczsny_co2_emitted = 0
@@ -500,7 +501,9 @@ def wygeneruj_grafike_dzielenia(user_id):
         
         stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         laczsny_co2_saved += stary_co2
-        liczba = len(wynik_obliczen.data) if wynik_obliczen.data else 0
+        liczba_starych = len(wynik_obliczen.data) if wynik_obliczen.data else 0
+        liczba_wszystkich_podrozy = len(wynik_podrozy.data) if wynik_podrozy.data else 0
+        liczba = liczba_wszystkich_podrozy
         
         netto = laczsny_co2_saved - laczsny_co2_emitted
         jest_negatywny = netto < 0
