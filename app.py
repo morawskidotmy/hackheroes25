@@ -505,7 +505,7 @@ def wygeneruj_grafike_dzielenia(user_id):
             
             rysowanie.rectangle([(0, 0), (szerokosc, 8)], fill='#00ff00')
             kolor_tekstu = '#00ff00'
-            wartosc_do_wyswietlenia = laczsny_co2_saved
+            wartosc_do_wyswietlenia = netto
             etykieta = "KG CO₂ OSZCZĘDZONO"
         
         tekst_co2 = f"{wartosc_do_wyswietlenia:.2f}"
@@ -597,7 +597,7 @@ def wygeneruj_grafike_statystyk(user_id):
             rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill='#00ff00')
             kolor_tytul = '#00ff00'
             kolor_wartosc = '#00ff00'
-            wartosc_do_wyswietlenia = laczsny_co2_oszczedzony
+            wartosc_do_wyswietlenia = netto
             etykieta_co2 = "kg CO₂ OSZCZĘDZONO"
             tytul = "Mój wpływ na klimat"
         
