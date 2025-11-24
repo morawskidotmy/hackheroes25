@@ -253,6 +253,31 @@ def pobliskie_stacje():
         return jsonify({'error': 'Błąd wewnętrzny serwera', 'details': str(e)}), 500
 
 
+def weryfikuj_token_uzytkownika(auth_header: str, uzytkownik_id: str) -> tuple[bool, str]:
+    if not auth_header:
+        return False, "Brak nagłówka autoryzacji"
+    
+    try:
+        scheme, token = auth_header.split()
+        if scheme.lower() != 'bearer':
+            return False, "Niepoprawny schemat autoryzacji"
+        
+        if not klient_supabase:
+            return False, "Weryfikacja niedostępna"
+        
+        user = klient_supabase.auth.get_user(token)
+        if not user or not user.user:
+            return False, "Niepoprawny token"
+        
+        if user.user.id != uzytkownik_id:
+            return False, "Token nie pasuje do user_id"
+        
+        return True, ""
+    except Exception as e:
+        logger.warning(f"Błąd weryfikacji tokenu: {e}")
+        return False, "Błąd weryfikacji tokenu"
+
+
 @app.route('/v1/save-journey', methods=['POST'])
 @limiter.limit("100/hour")
 def zapisz_podroze():
@@ -274,6 +299,12 @@ def zapisz_podroze():
         jest_poprawne, komunikat_bledu = waliduj_uzytkownik_id(uzytkownik_id)
         if not jest_poprawne:
             return jsonify({'error': komunikat_bledu}), 400
+        
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            jest_autoryzowany, komunikat_bledu_auth = weryfikuj_token_uzytkownika(auth_header, uzytkownik_id)
+            if not jest_autoryzowany:
+                return jsonify({'error': komunikat_bledu_auth}), 401
         lat = float(dane['latitude'])
         lon = float(dane['longitude'])
         dest_lat = float(dane['destination_latitude'])

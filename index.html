@@ -1727,26 +1727,33 @@
 
             try {
                  const payload = {
-                     user_id: currentUser.id,
-                     latitude: startLat,
-                     longitude: startLon,
-                      destination_latitude: endLat,
-                      destination_longitude: endLon,
-                      chosen_transport: selectedTransport,
-                      ...stacjaData
-                 };
-                 
-                 if (selectedTransport === 'bike' && selectedBikeType) {
-                     payload.bike_type = selectedBikeType;
-                 }
-                 
-                 const response = await fetch('/v1/save-journey', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                     },
-                     body: JSON.stringify(payload)
-                 });
+                      user_id: currentUser.id,
+                      latitude: startLat,
+                      longitude: startLon,
+                       destination_latitude: endLat,
+                       destination_longitude: endLon,
+                       chosen_transport: selectedTransport,
+                       ...stacjaData
+                  };
+                  
+                  if (selectedTransport === 'bike' && selectedBikeType) {
+                      payload.bike_type = selectedBikeType;
+                  }
+                  
+                  const headers = {
+                      'Content-Type': 'application/json',
+                  };
+                  
+                  const session = await supabase.auth.getSession();
+                  if (session?.data?.session?.access_token) {
+                      headers['Authorization'] = `Bearer ${session.data.session.access_token}`;
+                  }
+                  
+                  const response = await fetch('/v1/save-journey', {
+                      method: 'POST',
+                      headers: headers,
+                      body: JSON.stringify(payload)
+                  });
 
                 const data = await response.json();
 
