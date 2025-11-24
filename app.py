@@ -62,11 +62,24 @@ def formatuj_czas_podrozy(godziny: float) -> str:
     godziny_int = minuty // 60
     pozostale_minuty = minuty % 60
     
-    if pozostale_minuty == 0:
-        return f"{godziny_int} godzina" if godziny_int == 1 else f"{godziny_int} godzin"
+    if godziny_int == 1:
+        godzina_tekst = "1 godzina"
+    elif godziny_int % 10 in (2, 3, 4) and godziny_int % 100 not in (12, 13, 14):
+        godzina_tekst = f"{godziny_int} godziny"
+    else:
+        godzina_tekst = f"{godziny_int} godzin"
     
-    godzina_tekst = "1 godzina" if godziny_int == 1 else f"{godziny_int} godzin"
-    return f"{godzina_tekst} {pozostale_minuty} minut"
+    if pozostale_minuty == 0:
+        return godzina_tekst
+    
+    if pozostale_minuty == 1:
+        minuta_tekst = "1 minuta"
+    elif pozostale_minuty % 10 in (2, 3, 4) and pozostale_minuty % 100 not in (12, 13, 14):
+        minuta_tekst = f"{pozostale_minuty} minuty"
+    else:
+        minuta_tekst = f"{pozostale_minuty} minut"
+    
+    return f"{godzina_tekst} {minuta_tekst}"
 
 
 def waliduj_wspolrzedne(lat: float, lon: float) -> tuple[bool, str]:
