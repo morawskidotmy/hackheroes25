@@ -54,7 +54,7 @@ sqrt(CO) to nowoczesna aplikacja, która umożliwia monitorowanie wpływu Twoich
 
 ### Baza danych
 - **Supabase** (PostgreSQL)
-- **Autoryzacja**: e-mail, Google, Discord
+- **Autoryzacja**: e-mail, Discord
 
 ### Zewnętrzne API
 - **MEVO API** - stacje rowerowe
