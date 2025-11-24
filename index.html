@@ -1265,9 +1265,10 @@
              const shareSection = document.getElementById('shareSection');
              const shareGraphic = document.getElementById('shareGraphic');
              const shareTitle = document.querySelector('.share-title');
+             const timestamp = Date.now();
              
              if (stats.total_co2_saved_kg >= 0 || stats.is_negative) {
-                 shareGraphic.src = `/v1/share-graphic/${userId}`;
+                 shareGraphic.src = `/v1/share-graphic/${userId}?t=${timestamp}`;
                  shareSection.classList.add('visible');
                  
                  if (stats.is_negative) {
@@ -1323,7 +1324,8 @@
               const userId = currentUser?.id;
               if (!userId) return;
               
-              const graphicUrl = `/v1/share-graphic-stats/${userId}`;
+              const timestamp = Date.now();
+              const graphicUrl = `/v1/share-graphic-stats/${userId}?t=${timestamp}`;
               
               const link = document.createElement('a');
               link.href = graphicUrl;
