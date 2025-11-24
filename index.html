@@ -1264,16 +1264,21 @@
         function updateShareSection(stats, userId) {
              const shareSection = document.getElementById('shareSection');
              const shareGraphic = document.getElementById('shareGraphic');
+             const shareTitle = document.querySelector('.share-title');
              
-             if (stats.total_co2_kg > 0) {
+             if (stats.total_co2_saved_kg >= 0 || stats.is_negative) {
                  shareGraphic.src = `/v1/share-graphic/${userId}`;
                  shareSection.classList.add('visible');
                  
-                 const shareTitle = document.querySelector('.share-title');
-                 if (stats.net_neutral) {
-                     shareTitle.innerHTML = '✓ Twój wpływ (Net Pozytywny)';
+                 if (stats.is_negative) {
+                     shareTitle.innerHTML = `⚠️ Emisja netto: ${Math.abs(stats.net_balance_kg).toFixed(2)} kg CO₂`;
+                     shareSection.style.borderColor = '#ff4444';
+                 } else if (stats.net_neutral) {
+                     shareTitle.innerHTML = `✓ Wpływ pozytywny: ${stats.net_balance_kg.toFixed(2)} kg oszczędności`;
+                     shareSection.style.borderColor = '#00ff00';
                  } else {
-                     shareTitle.textContent = 'Twój wpływ';
+                     shareTitle.innerHTML = `Twój wpływ: ${stats.net_balance_kg.toFixed(2)} kg`;
+                     shareSection.style.borderColor = '#333';
                  }
              }
          }

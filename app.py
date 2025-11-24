@@ -421,16 +421,23 @@ def pobierz_statystyki_uzytkownika(user_id):
         stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         liczba_starych = len(wynik_obliczen.data) if wynik_obliczen.data else 0
         
+        total_co2 = laczsny_co2 + stary_co2
+        total_emitted = co2_emitowany
+        saldo_netto = total_co2 - total_emitted
+        
         return jsonify({
             'success': True,
             'user_id': user_id,
-            'total_co2_kg': round(laczsny_co2 + stary_co2, 2),
-             'total_co2_grams': int((laczsny_co2 + stary_co2) * 1000),
-             'bike_journeys': podroze_rowerem,
-             'car_journeys': podroze_samochodem,
-             'net_neutral': neutralny_net,
-             'trips_count': liczba_starych + podroze_rowerem + podroze_samochodem,
-             'equivalent_trees': round((laczsny_co2 + stary_co2) / CO2_NA_DRZEWO_KG, 2)
+            'total_co2_saved_kg': round(total_co2, 2),
+            'total_co2_emitted_kg': round(total_emitted, 2),
+            'total_co2_grams': int(total_co2 * 1000),
+            'bike_journeys': podroze_rowerem,
+            'car_journeys': podroze_samochodem,
+            'net_balance_kg': round(saldo_netto, 2),
+            'net_neutral': neutralny_net,
+            'is_negative': saldo_netto < 0,
+            'trips_count': liczba_starych + podroze_rowerem + podroze_samochodem,
+            'equivalent_trees': round(total_co2 / CO2_NA_DRZEWO_KG, 2)
         }), 200
     
     except Exception as e:
@@ -448,12 +455,24 @@ def wygeneruj_grafike_dzielenia(user_id):
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
-        wynik = klient_supabase.table('co2_calculations').select(
-            'co2_savings_kg'
-        ).eq('user_id', user_id).execute()
+        wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
+        wynik_obliczen = klient_supabase.table('co2_calculations').select('co2_savings_kg').eq('user_id', user_id).execute()
         
-        laczsny_co2 = sum(item['co2_savings_kg'] for item in wynik.data) if wynik.data else 0
-        liczba = len(wynik.data) if wynik.data else 0
+        laczsny_co2_saved = 0
+        laczsny_co2_emitted = 0
+        liczba = 0
+        
+        if wynik_statystyk.data:
+            stat = wynik_statystyk.data[0]
+            laczsny_co2_saved = stat.get('total_co2_saved_kg', 0)
+            laczsny_co2_emitted = stat.get('total_co2_emitted_kg', 0)
+        
+        stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
+        laczsny_co2_saved += stary_co2
+        liczba = len(wynik_obliczen.data) if wynik_obliczen.data else 0
+        
+        netto = laczsny_co2_saved - laczsny_co2_emitted
+        jest_negatywny = netto < 0
         
         szerokosc, wysokosc = 1200, 630
         obraz = Image.new('RGB', (szerokosc, wysokosc), color='#000000')
@@ -468,17 +487,31 @@ def wygeneruj_grafike_dzielenia(user_id):
             czcionka_wartosc = ImageFont.load_default()
             czcionka_etykieta = ImageFont.load_default()
         
-        for y in range(wysokosc):
-            odcien = int(20 * (y / wysokosc))
-            kolor = (odcien, odcien, odcien)
-            rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+        if jest_negatywny:
+            for y in range(wysokosc):
+                odcien = int(30 * (y / wysokosc))
+                kolor = (odcien, 0, 0)
+                rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+            
+            rysowanie.rectangle([(0, 0), (szerokosc, 8)], fill='#ff4444')
+            kolor_tekstu = '#ff4444'
+            wartosc_do_wyswietlenia = abs(netto)
+            etykieta = "KG CO₂ EMISJI"
+        else:
+            for y in range(wysokosc):
+                odcien = int(20 * (y / wysokosc))
+                kolor = (odcien, odcien, odcien)
+                rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+            
+            rysowanie.rectangle([(0, 0), (szerokosc, 8)], fill='#00ff00')
+            kolor_tekstu = '#00ff00'
+            wartosc_do_wyswietlenia = laczsny_co2_saved
+            etykieta = "KG CO₂ OSZCZĘDZONO"
         
-        rysowanie.rectangle([(0, 0), (szerokosc, 8)], fill='#00ff00')
+        tekst_co2 = f"{wartosc_do_wyswietlenia:.2f}"
+        rysowanie.text((szerokosc//2, 200), tekst_co2, fill=kolor_tekstu, font=czcionka_wartosc, anchor="mm")
         
-        tekst_co2 = f"{laczsny_co2:.2f}"
-        rysowanie.text((szerokosc//2, 200), tekst_co2, fill='#00ff00', font=czcionka_wartosc, anchor="mm")
-        
-        rysowanie.text((szerokosc//2, 380), "KG CO₂ OSZCZĘDZONO", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, 380), etykieta, fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
         tekst_podrozy = f"{liczba} podróży"
         rysowanie.text((szerokosc//2, 480), tekst_podrozy, fill='#888888', font=czcionka_etykieta, anchor="mm")
@@ -509,18 +542,24 @@ def wygeneruj_grafike_statystyk(user_id):
         wynik_statystyk = klient_supabase.table('user_stats').select('*').eq('user_id', user_id).execute()
         
         podroze_rowerem = 0
+        podroze_samochodem = 0
         laczsny_co2_oszczedzony = 0
+        laczsny_co2_emitowany = 0
         
         if wynik_statystyk.data:
             stat_uzytkownika = wynik_statystyk.data[0]
             laczsny_co2_oszczedzony = stat_uzytkownika['total_co2_saved_kg']
+            laczsny_co2_emitowany = stat_uzytkownika.get('total_co2_emitted_kg', 0)
             podroze_rowerem = stat_uzytkownika['total_bike_journeys']
+            podroze_samochodem = stat_uzytkownika['total_car_journeys']
         
         wynik_obliczen = klient_supabase.table('co2_calculations').select('distance_km,co2_savings_kg').eq('user_id', user_id).execute()
         laczsny_dystans = sum(item['distance_km'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         stary_co2 = sum(item['co2_savings_kg'] for item in wynik_obliczen.data) if wynik_obliczen.data else 0
         
         laczsny_co2_oszczedzony += stary_co2
+        netto = laczsny_co2_oszczedzony - laczsny_co2_emitowany
+        jest_negatywny = netto < 0
         
         szerokosc, wysokosc = 1200, 630
         obraz = Image.new('RGB', (szerokosc, wysokosc), color='#000000')
@@ -537,23 +576,40 @@ def wygeneruj_grafike_statystyk(user_id):
             czcionka_etykieta = ImageFont.load_default()
             czcionka_mala = ImageFont.load_default()
         
-        for y in range(wysokosc):
-            odcien = int(30 * (y / wysokosc))
-            kolor = (odcien, odcien, odcien)
-            rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+        if jest_negatywny:
+            for y in range(wysokosc):
+                odcien = int(30 * (y / wysokosc))
+                kolor = (odcien, 0, 0)
+                rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+            
+            rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill='#ff4444')
+            kolor_tytul = '#ff4444'
+            kolor_wartosc = '#ff4444'
+            wartosc_do_wyswietlenia = abs(netto)
+            etykieta_co2 = "kg CO₂ EMISJI"
+            tytul = "Twoja emisja netto"
+        else:
+            for y in range(wysokosc):
+                odcien = int(30 * (y / wysokosc))
+                kolor = (odcien, odcien, odcien)
+                rysowanie.rectangle([(0, y), (szerokosc, y+1)], fill=kolor)
+            
+            rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill='#00ff00')
+            kolor_tytul = '#00ff00'
+            kolor_wartosc = '#00ff00'
+            wartosc_do_wyswietlenia = laczsny_co2_oszczedzony
+            etykieta_co2 = "kg CO₂ OSZCZĘDZONO"
+            tytul = "Mój wpływ na klimat"
         
-        rysowanie.rectangle([(0, 0), (szerokosc, 10)], fill='#00ff00')
+        rysowanie.text((szerokosc//2, 80), tytul, fill=kolor_tytul, font=czcionka_tytul, anchor="mm")
         
-        tytul = "Mój wpływ na klimat"
-        rysowanie.text((szerokosc//2, 80), tytul, fill='#00ff00', font=czcionka_tytul, anchor="mm")
+        tekst_co2 = f"{wartosc_do_wyswietlenia:.1f}"
+        rysowanie.text((szerokosc//2, 250), tekst_co2, fill=kolor_wartosc, font=czcionka_wartosc, anchor="mm")
         
-        tekst_co2 = f"{laczsny_co2_oszczedzony:.1f}"
-        rysowanie.text((szerokosc//2, 250), tekst_co2, fill='#00ff00', font=czcionka_wartosc, anchor="mm")
-        
-        rysowanie.text((szerokosc//2, 360), "kg CO₂ OSZCZĘDZONO", fill='#ffffff', font=czcionka_etykieta, anchor="mm")
+        rysowanie.text((szerokosc//2, 360), etykieta_co2, fill='#ffffff', font=czcionka_etykieta, anchor="mm")
         
         y_statystyk = 450
-        tekst_statystyk = f"Podróże: {podroze_rowerem} | Kilometraż: {laczsny_dystans:.1f} km"
+        tekst_statystyk = f"Rower: {podroze_rowerem} | Auto: {podroze_samochodem} | {laczsny_dystans:.1f} km"
         rysowanie.text((szerokosc//2, y_statystyk), tekst_statystyk, fill='#888888', font=czcionka_mala, anchor="mm")
         
         rysowanie.text((szerokosc//2, wysokosc-60), "hh25.morawski.my", fill='#666666', font=czcionka_etykieta, anchor="mm")
