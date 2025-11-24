@@ -1070,6 +1070,54 @@
         let selectedBikeType = null;
         let maxCO2 = 5;
 
+        function createDebounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function createThrottle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        const debouncedLoadUserStats = createDebounce(async () => {
+            if (!currentUser) return;
+            try {
+                const response = await fetch(`/v1/user-stats/${currentUser.id}`);
+                const data = await response.json();
+                if (data.success) {
+                    updateShareSection(data, currentUser.id);
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+            }
+        }, 500);
+
+        const throttledLoadGlobalStats = createThrottle(async () => {
+            try {
+                const response = await fetch('/v1/global-stats');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('globalCO2').textContent = data.global_co2_saved_kg.toFixed(0);
+                    document.getElementById('globalBikes').textContent = data.global_bike_journeys;
+                    document.getElementById('globalTrees').textContent = data.equivalent_trees.toFixed(0);
+                    document.getElementById('globalUsers').textContent = data.total_users;
+                    document.getElementById('globalStats').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Błąd globalnych statystyk:', error);
+            }
+        }, 1000);
+
         async function initSupabase() {
             try {
                 const response = await fetch('/config');
@@ -1209,40 +1257,8 @@
                  document.getElementById('transportSection').classList.add('visible');
              }
              
-             loadUserStats();
-             loadGlobalStats();
-        }
-
-        async function loadUserStats() {
-            if (!currentUser) return;
-            
-            try {
-                const response = await fetch(`/v1/user-stats/${currentUser.id}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    updateShareSection(data, currentUser.id);
-                }
-            } catch (error) {
-                console.error('Błąd:', error);
-            }
-        }
-
-        async function loadGlobalStats() {
-            try {
-                const response = await fetch('/v1/global-stats');
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('globalCO2').textContent = data.global_co2_saved_kg.toFixed(0);
-                    document.getElementById('globalBikes').textContent = data.global_bike_journeys;
-                    document.getElementById('globalTrees').textContent = data.equivalent_trees.toFixed(0);
-                    document.getElementById('globalUsers').textContent = data.total_users;
-                    document.getElementById('globalStats').style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Błąd globalnych statystyk:', error);
-            }
+             debouncedLoadUserStats();
+             throttledLoadGlobalStats();
         }
 
         function updateShareSection(stats, userId) {
@@ -1367,7 +1383,7 @@
                      }
                      
                      if (currentUser) {
-                         setTimeout(loadUserStats, 500);
+                         debouncedLoadUserStats();
                      }
                 } else {
                     msg.textContent = '❌ ' + (data.error || 'Błąd obliczeń');
@@ -1730,11 +1746,10 @@
                 if (data.success) {
                      showNotification(`✓ ${data.message}`, 'success');
                      
-                     // Hide stats and transport section
                      document.getElementById('stats').innerHTML = '';
                      document.getElementById('transportSection').classList.remove('visible');
                      
-                     setTimeout(loadUserStats, 500);
+                     debouncedLoadUserStats();
                       
                       setTimeout(() => {
                           selectedTransport = null;

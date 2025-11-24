@@ -4,10 +4,11 @@ from typing import List, Dict
 import logging
 from cachetools import TTLCache
 from datetime import datetime
+import time
 
 logger = logging.getLogger(__name__)
 
-mevo_cache = TTLCache(maxsize=100, ttl=300)
+mevo_cache = TTLCache(maxsize=50, ttl=120)
 
 def oblicz_dystans(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
@@ -36,8 +37,14 @@ class Dostawa_MEVO:
             cache_key = "mevo_data"
             
             if cache_key in mevo_cache:
-                informacje_stacji, status_stacji = mevo_cache[cache_key]
+                informacje_stacji, status_stacji, cache_time = mevo_cache[cache_key]
+                if time.time() - cache_time > 120:
+                    del mevo_cache[cache_key]
+                    raise KeyError
             else:
+                raise KeyError
+                
+            if cache_key not in mevo_cache:
                 odpowiedz_info = requests.get(
                     f"{self.adres_bazowy}/station_information.json",
                     headers={"Client-Identifier": self.identyfikator_klienta},
@@ -54,7 +61,7 @@ class Dostawa_MEVO:
                 odpowiedz_status.raise_for_status()
                 status_stacji = odpowiedz_status.json()
                 
-                mevo_cache[cache_key] = (informacje_stacji, status_stacji)
+                mevo_cache[cache_key] = (informacje_stacji, status_stacji, time.time())
             
             pojazdy = []
             

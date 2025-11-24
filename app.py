@@ -1,6 +1,8 @@
 import math
 import os
 import sys
+import re
+import uuid
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -33,6 +35,7 @@ CO2_NA_KM_SAMOCHOD = 0.12
 PREDKOSC_ROWERU_KMH = 15.0
 PREDKOSC_SAMOCHODU_KMH = 40.0
 DOMYSLNY_PROMIEN = 2.0
+CO2_NA_DRZEWO_KG = 21  # Average lifetime CO2 absorption per tree (kg)
 
 app = Flask(__name__)
 CORS(app, resources={r"/v1/*": {"origins": ["https://hh25.morawski.my", "http://localhost:*"]}, r"/health": {"origins": "*"}})
@@ -71,6 +74,18 @@ def waliduj_wspolrzedne(lat: float, lon: float) -> tuple[bool, str]:
         return False, "Szerokość geograficzna musi być między -90 a 90"
     if lon < -180 or lon > 180:
         return False, "Długość geograficzna musi być między -180 a 180"
+    return True, ""
+
+
+def waliduj_uzytkownik_id(user_id: str) -> tuple[bool, str]:
+    """Validates user_id format to prevent injection attacks."""
+    if not user_id or len(user_id) > 255:
+        return False, "Niepoprawny format identyfikatora użytkownika"
+    
+    # Allow UUID format or alphanumeric with common separators (-, _)
+    if not re.match(r'^[a-zA-Z0-9\-_]+$', user_id):
+        return False, "Identyfikator użytkownika zawiera niedozwolone znaki"
+    
     return True, ""
 
 
@@ -188,7 +203,7 @@ def oblicz_co2():
             'environmental_impact': {
                 'co2_per_km_car_grams': 120,
                 'co2_saved_grams': int(oszczednosci_co2 * 1000),
-                'equivalent_trees': round(oszczednosci_co2 / 0.021, 2)
+                'equivalent_trees': round(oszczednosci_co2 / CO2_NA_DRZEWO_KG, 2)
             }
         }
         
@@ -256,6 +271,9 @@ def zapisz_podroze():
             }), 400
         
         uzytkownik_id = dane['user_id']
+        jest_poprawne, komunikat_bledu = waliduj_uzytkownik_id(uzytkownik_id)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
         lat = float(dane['latitude'])
         lon = float(dane['longitude'])
         dest_lat = float(dane['destination_latitude'])
@@ -321,38 +339,49 @@ def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_os
         if not klient_supabase:
             return
         
-        wynik = klient_supabase.table('user_stats').select('*').eq('user_id', uzytkownik_id).execute()
-        
-        if wynik.data:
-            obecny = wynik.data[0]
-            nowy_co2_oszczedzony = obecny['total_co2_saved_kg'] + (co2_oszczedzony if transport == 'bike' else 0)
-            nowy_co2_emitowany = obecny.get('total_co2_emitted_kg', 0) + (dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0)
-            nowa_liczba_rowerow = obecny['total_bike_journeys'] + (1 if transport == 'bike' else 0)
-            nowa_liczba_samochodow = obecny['total_car_journeys'] + (1 if transport == 'car' else 0)
-            
-            saldo_netto = nowy_co2_oszczedzony - nowy_co2_emitowany
-            neutralny_net = saldo_netto >= 0
-            
-            klient_supabase.table('user_stats').update({
-                'total_co2_saved_kg': round(nowy_co2_oszczedzony, 3),
-                'total_co2_emitted_kg': round(nowy_co2_emitowany, 3),
-                'total_bike_journeys': nowa_liczba_rowerow,
-                'total_car_journeys': nowa_liczba_samochodow,
-                'net_neutral': neutralny_net,
-                'last_updated': datetime.utcnow().isoformat()
-            }).eq('user_id', uzytkownik_id).execute()
-        else:
-            neutralny_net = transport == 'bike'
-            co2_emitowany = dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0
-            klient_supabase.table('user_stats').insert({
-                'user_id': uzytkownik_id,
-                'total_co2_saved_kg': round(co2_oszczedzony if transport == 'bike' else 0, 3),
-                'total_co2_emitted_kg': round(co2_emitowany, 3),
-                'total_bike_journeys': 1 if transport == 'bike' else 0,
-                'total_car_journeys': 1 if transport == 'car' else 0,
-                'net_neutral': neutralny_net,
-                'last_updated': datetime.utcnow().isoformat()
-            }).execute()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                wynik = klient_supabase.table('user_stats').select('*').eq('user_id', uzytkownik_id).execute()
+                
+                if wynik.data:
+                    obecny = wynik.data[0]
+                    nowy_co2_oszczedzony = obecny['total_co2_saved_kg'] + (co2_oszczedzony if transport == 'bike' else 0)
+                    nowy_co2_emitowany = obecny.get('total_co2_emitted_kg', 0) + (dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0)
+                    nowa_liczba_rowerow = obecny['total_bike_journeys'] + (1 if transport == 'bike' else 0)
+                    nowa_liczba_samochodow = obecny['total_car_journeys'] + (1 if transport == 'car' else 0)
+                    
+                    neutralny_net = (nowy_co2_oszczedzony - nowy_co2_emitowany) >= 0
+                    
+                    klient_supabase.table('user_stats').update({
+                        'total_co2_saved_kg': round(nowy_co2_oszczedzony, 3),
+                        'total_co2_emitted_kg': round(nowy_co2_emitowany, 3),
+                        'total_bike_journeys': nowa_liczba_rowerow,
+                        'total_car_journeys': nowa_liczba_samochodow,
+                        'net_neutral': neutralny_net,
+                        'last_updated': datetime.utcnow().isoformat()
+                    }).eq('user_id', uzytkownik_id).execute()
+                    return
+                else:
+                    co2_oszczedzony_init = co2_oszczedzony if transport == 'bike' else 0
+                    co2_emitowany = dystans * CO2_NA_KM_SAMOCHOD if transport == 'car' else 0
+                    neutralny_net = (co2_oszczedzony_init - co2_emitowany) >= 0
+                    
+                    klient_supabase.table('user_stats').insert({
+                        'user_id': uzytkownik_id,
+                        'total_co2_saved_kg': round(co2_oszczedzony_init, 3),
+                        'total_co2_emitted_kg': round(co2_emitowany, 3),
+                        'total_bike_journeys': 1 if transport == 'bike' else 0,
+                        'total_car_journeys': 1 if transport == 'car' else 0,
+                        'net_neutral': neutralny_net,
+                        'last_updated': datetime.utcnow().isoformat()
+                    }).execute()
+                    return
+            except Exception as retry_e:
+                if attempt == max_retries - 1:
+                    raise retry_e
+                import time
+                time.sleep(0.1 * (attempt + 1))
     except Exception as e:
         logger.warning(f"Nie udało się zaktualizować statystyk użytkownika: {e}")
 
@@ -360,6 +389,10 @@ def aktualizuj_statystyki_uzytkownika(uzytkownik_id: str, transport: str, co2_os
 @app.route('/v1/user-stats/<user_id>', methods=['GET'])
 def pobierz_statystyki_uzytkownika(user_id):
     try:
+        jest_poprawne, komunikat_bledu = waliduj_uzytkownik_id(user_id)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
+        
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
@@ -392,12 +425,12 @@ def pobierz_statystyki_uzytkownika(user_id):
             'success': True,
             'user_id': user_id,
             'total_co2_kg': round(laczsny_co2 + stary_co2, 2),
-            'total_co2_grams': int((laczsny_co2 + stary_co2) * 1000),
-            'bike_journeys': podroze_rowerem,
-            'car_journeys': podroze_samochodem,
-            'net_neutral': neutralny_net,
-            'trips_count': liczba_starych + podroze_rowerem + podroze_samochodem,
-            'equivalent_trees': round((laczsny_co2 + stary_co2) / 0.021, 2)
+             'total_co2_grams': int((laczsny_co2 + stary_co2) * 1000),
+             'bike_journeys': podroze_rowerem,
+             'car_journeys': podroze_samochodem,
+             'net_neutral': neutralny_net,
+             'trips_count': liczba_starych + podroze_rowerem + podroze_samochodem,
+             'equivalent_trees': round((laczsny_co2 + stary_co2) / CO2_NA_DRZEWO_KG, 2)
         }), 200
     
     except Exception as e:
@@ -408,6 +441,10 @@ def pobierz_statystyki_uzytkownika(user_id):
 @app.route('/v1/share-graphic/<user_id>', methods=['GET'])
 def wygeneruj_grafike_dzielenia(user_id):
     try:
+        jest_poprawne, komunikat_bledu = waliduj_uzytkownik_id(user_id)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
+        
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
@@ -462,6 +499,10 @@ def wygeneruj_grafike_dzielenia(user_id):
 @app.route('/v1/share-graphic-stats/<user_id>', methods=['GET'])
 def wygeneruj_grafike_statystyk(user_id):
     try:
+        jest_poprawne, komunikat_bledu = waliduj_uzytkownik_id(user_id)
+        if not jest_poprawne:
+            return jsonify({'error': komunikat_bledu}), 400
+        
         if not klient_supabase:
             return jsonify({'error': 'Statystyki niedostępne'}), 503
         
