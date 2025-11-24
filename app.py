@@ -22,7 +22,7 @@ ADRES_SUPABASE = os.getenv('ADRES_SUPABASE')
 KLUCZ_SUPABASE = os.getenv('KLUCZ_SUPABASE')
 
 if not ADRES_SUPABASE or not KLUCZ_SUPABASE:
-    print("ERROR: ADRES_SUPABASE and KLUCZ_SUPABASE must be set in .env")
+    print("BŁĄD: ADRES_SUPABASE i KLUCZ_SUPABASE muszą być ustawione w .env")
     sys.exit(1)
 
 SUPABASE_DOSTEPNY = True
@@ -209,7 +209,7 @@ def oblicz_co2():
         
         if najblizszy_pojazd:
             odpowiedz['closest_vehicle'] = najblizszy_pojazd
-            odpowiedz['message'] = f"Wybierając {najblizszy_pojazd['type']} zamiast samochodu na trasę {dystans:.2f}km oszczędzasz około {oszczednosci_co2:.2f}kg CO₂!"
+            odpowiedz['message'] = f"Wybierając rower zamiast samochodu na trasę {dystans:.2f}km oszczędzasz około {oszczednosci_co2:.2f}kg CO₂!"
         else:
             odpowiedz['message'] = f"Brak rowerów w Twojej okolicy. Na trasę {dystans:.2f}km oszczędziłbyś {oszczednosci_co2:.2f}kg CO₂ wybierając rower zamiast samochodu!"
         
@@ -354,10 +354,11 @@ def zapisz_podroze():
         
         aktualizuj_statystyki_uzytkownika(uzytkownik_id, wybrany_transport, potencjalny_co2, dystans)
         
+        transport_label = 'Rower 🚴' if wybrany_transport == 'bike' else 'Samochód 🚗'
         return jsonify({
             'success': True,
             'journey_id': wynik.data[0]['id'] if wynik.data else None,
-            'message': f"Podróż zapisana: {wybrany_transport.upper()} ({dystans:.2f}km)"
+            'message': f"Podróż zapisana: {transport_label} ({dystans:.2f}km)"
         }), 200
     
     except Exception as e:
