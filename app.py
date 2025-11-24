@@ -53,20 +53,31 @@ def oblicz_oszczednosci_co2(dystans_km: float) -> float:
     return dystans_km * CO2_NA_KM_SAMOCHOD
 
 
+def odmieniaj_liczbe(liczba: int, singular: str, plural_2_4: str, plural_5: str) -> str:
+    if liczba == 1:
+        return f"1 {singular}"
+    elif liczba % 10 in (2, 3, 4) and liczba % 100 not in (12, 13, 14):
+        return f"{liczba} {plural_2_4}"
+    else:
+        return f"{liczba} {plural_5}"
+
+
 def formatuj_czas_podrozy(godziny: float) -> str:
     minuty = int(godziny * 60)
     
     if minuty < 60:
-        return f"{minuty} minut"
+        return odmieniaj_liczbe(minuty, "minuta", "minuty", "minut")
     
     godziny_int = minuty // 60
     pozostale_minuty = minuty % 60
     
-    if pozostale_minuty == 0:
-        return f"{godziny_int} godzina" if godziny_int == 1 else f"{godziny_int} godzin"
+    godzina_tekst = odmieniaj_liczbe(godziny_int, "godzina", "godziny", "godzin")
     
-    godzina_tekst = "1 godzina" if godziny_int == 1 else f"{godziny_int} godzin"
-    return f"{godzina_tekst} {pozostale_minuty} minut"
+    if pozostale_minuty == 0:
+        return godzina_tekst
+    
+    minuta_tekst = odmieniaj_liczbe(pozostale_minuty, "minuta", "minuty", "minut")
+    return f"{godzina_tekst} {minuta_tekst}"
 
 
 def waliduj_wspolrzedne(lat: float, lon: float) -> tuple[bool, str]:
